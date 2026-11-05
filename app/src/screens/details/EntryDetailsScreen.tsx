@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { ActivityIndicator, Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -26,6 +34,22 @@ export function EntryDetailsScreen({ route, navigation }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     async function loadEntry() {
@@ -62,6 +86,12 @@ export function EntryDetailsScreen({ route, navigation }: Props) {
 
   function confirmDelete() {
     feedback.warning();
+    if (Platform.OS === 'web') {
+      if (window.confirm('Tem certeza que deseja excluir este registro?')) {
+        handleDelete();
+      }
+      return;
+    }
     Alert.alert('Excluir registro', 'Tem certeza que deseja excluir este registro?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: handleDelete },
@@ -101,47 +131,65 @@ export function EntryDetailsScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={[styles.hero, { backgroundColor: colors.primary }]}>
-          <Text style={styles.heroAmount}>{formatMl(entry.amount_ml)}</Text>
-          <Text style={styles.heroDate}>{formatFullDate(entry.created_at)}</Text>
-          <Text style={styles.heroDate}>às {formatTime(entry.created_at)}</Text>
-        </View>
-
-        <Text style={[styles.section, { color: colors.navy }]}>Editar registro</Text>
-        <TextInput
-          label="Quantidade (ml)"
-          mode="outlined"
-          keyboardType="number-pad"
-          value={amount}
-          onChangeText={setAmount}
-        />
-        <TextInput
-          label="Observação"
-          mode="outlined"
-          value={note}
-          onChangeText={setNote}
-          maxLength={200}
-          style={styles.field}
-        />
-        <HelperText type="error" visible={!!error}>
-          {error}
-        </HelperText>
-
-        <Button mode="contained" onPress={handleSave} loading={isSaving} disabled={isSaving} contentStyle={styles.buttonContent}>
-          Salvar alterações
-        </Button>
-        <Button
-          mode="outlined"
-          textColor={colors.danger}
-          onPress={confirmDelete}
-          icon="delete-outline"
-          style={styles.delete}
-          contentStyle={styles.buttonContent}
+      <KeyboardAvoidingView
+        style={styles.safe}
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + spacing.xl },
+          ]}
+          keyboardShouldPersistTaps="handled"
         >
-          Excluir registro
-        </Button>
-      </ScrollView>
+          <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+            <Text style={styles.heroAmount}>{formatMl(entry.amount_ml)}</Text>
+            <Text style={styles.heroDate}>{formatFullDate(entry.created_at)}</Text>
+            <Text style={styles.heroDate}>às {formatTime(entry.created_at)}</Text>
+          </View>
+
+          <Text style={[styles.section, { color: colors.navy }]}>Editar registro</Text>
+          <TextInput
+            label="Quantidade (ml)"
+            mode="outlined"
+            keyboardType="number-pad"
+            value={amount}
+            onChangeText={setAmount}
+          />
+          <TextInput
+            label="Observação"
+            mode="outlined"
+            value={note}
+            onChangeText={setNote}
+            maxLength={200}
+            style={styles.field}
+          />
+          <HelperText type="error" visible={!!error}>
+            {error}
+          </HelperText>
+
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            loading={isSaving}
+            disabled={isSaving}
+            contentStyle={styles.buttonContent}
+          >
+            Salvar alterações
+          </Button>
+          <Button
+            mode="outlined"
+            textColor={colors.danger}
+            onPress={confirmDelete}
+            icon="delete-outline"
+            style={styles.delete}
+            contentStyle={styles.buttonContent}
+          >
+            Excluir registro
+          </Button>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -3,6 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Snackbar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { IosInstallBanner } from '../../components/common/IosInstallBanner';
 import { StateMessage } from '../../components/common/StateMessage';
 import { ProgressRing } from '../../components/dashboard/ProgressRing';
 import { StatCard } from '../../components/dashboard/StatCard';
@@ -93,6 +94,7 @@ export function HomeScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
       >
+        <IosInstallBanner />
         <Text style={[styles.greeting, { color: colors.navy }]}>
           {greetingForNow()}, {firstName(user?.name ?? '')}! 👋
         </Text>

@@ -1,0 +1,19 @@
+{
+  "name": "Drink To You",
+  "short_name": "Drink To You",
+  "description": "Sua hidratação, sob controle.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#102B46",
+  "theme_color": "#102B46",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
