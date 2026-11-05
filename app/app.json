@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Drink To You",
+    "slug": "drink-to-you",
+    "scheme": "drinktoyou",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.drinktoyou.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.drinktoyou.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#102B46",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Drink To You usa sua localização apenas para mostrar o clima da sua cidade."
+        }
+      ],
+      "expo-notifications",
+      "expo-font"
+    ]
+  }
+}
