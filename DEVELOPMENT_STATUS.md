@@ -2,21 +2,17 @@
 
 | Etapa | Situação | Observações |
 |---|---|---|
-| Repositório Git e `.gitignore` | Concluído | Configurado na raiz, `/api` e `/app` |
-| Backend Node.js + Express (`/api`) | Concluído e Testado | Estrutura routes, controllers, services e middlewares |
-| Banco de Dados PostgreSQL (Supabase) | Concluído e Testado | Tabelas `users`, `water_entries`, `user_preferences` + usuário demo |
-| Testes Automatizados da API (24 casos) | Concluído (24/24 OK) | Auth, CRUD, resumos, validações e isolamento entre usuários |
-| Deploy da API no Render | Concluído e Online | `https://drink-to-you-api.onrender.com` |
-| App React Native + Expo (`/app`) | Concluído | TypeScript, `tsc` sem erros e `expo-doctor` 20/20 |
-| Navegação Stack + Bottom Tabs + Parâmetros | Concluído | `RootNavigator`, `MainTabs` e `EntryDetails` recebendo `{ entryId }` |
-| Context API (`AuthContext` e `ThemeContext`) | Concluído | Sessão JWT + Tema Claro/Escuro |
-| Consumo de API Externa (Open-Meteo) | Concluído | Com geolocalização, fallback, estados de loading e erro |
-| Lista com `keyExtractor` e Detalhes | Concluído | `SectionList` no Histórico agrupado por dia |
-| Formulários Controlados | Concluído | `TextInput`, `Switch` e `Button` com validação |
-| Persistência Local (`AsyncStorage`) | Concluído | Token, tema, preferências e flag de onboarding |
-| Hooks Customizados | Concluído | `useAuth`, `useAppTheme`, `useFetch`, `useWeather`, `useWaterSummary`, `useSlowHint` |
-| Recursos do Dispositivo | Concluído | `expo-notifications`, `expo-haptics` e `expo-location` |
-| Ícone, Splash Screen e Identidade Visual | Concluído | Paleta azul profundo, azul-ciano e branco (com modo escuro) |
-| Documentação Acadêmica e DER | Concluído | `README.md`, `DATABASE.md`, `API_CONTRACT.md`, `ARCHITECTURE.md`, `PROJECT_CONTEXT.md` |
-| Distribuição EAS Update (iOS / Expo Go) | Em finalização | Canal `preview` |
-| Build do APK Android (EAS Build) | Em processamento na nuvem | Perfil `preview` |
+| Repositório Git e `.gitignore` | Concluído | Configurado na raiz e `/app`, preservando fontes/ícones do PWA |
+| Backend Node.js + Express (`/api`) | Concluído e Testado | Rotas `auth`, `water-entries`, `preferences`, `challenges` e `achievements` |
+| Banco de Dados PostgreSQL (Supabase) | Concluído e Testado | 7 tabelas relacionais + seed `demo@drinktoyou.com` + sala `AGUA-DEMO` |
+| Testes Automatizados da API (35 casos) | Concluído (35/35 OK) | 24 casos base + 11 casos E2E de desafios, anti-burla, ranking e conquistas |
+| Deploy da API + PWA no Render | Concluído e Online | `https://drink-to-you-api.onrender.com` |
+| App React Native + Expo + Web (`/app`) | Concluído | TypeScript `tsc --noEmit` (0 erros) e `expo-doctor` (20/20 OK) |
+| Correção de Teclado e UX/UI | Concluído | `KeyboardAvoidingView` + `pan`, cabeçalhos em gradiente, botão Desfazer, celebração 100% |
+| Salas de Desafio & Chama em Dupla/Grupo | Concluído | Convite por código, datas de início/fim, saída livre, check-in com foto anti-burla, ranking e reações |
+| Sistema de 15 Conquistas + Nível/XP | Concluído | 15 medalhas (Bronze, Prata, Ouro e 3 Lendárias/Diamante de alta retenção) |
+| Correção Definitiva de Ícones no PWA | Concluído | `MaterialCommunityIcons.ttf` preloaded, `@font-face` explícito, `PaperProvider` icon settings e `.gitignore` ajustado |
+| Recursos do Dispositivo | Concluído | `expo-image-picker`, `expo-notifications`, `expo-haptics` e `expo-location` |
+| Documentação Acadêmica e DER | Concluído | `README.md`, `DATABASE.md`, `API_CONTRACT.md`, `ARCHITECTURE.md` |
+| Distribuição iOS / Web (PWA Instalável) | Concluído | Instalável direto pelo Safari ("Adicionar à Tela de Início") sem Expo Go |
+| Distribuição Android (APK EAS Build) | Concluído / Atualizado | APK standalone gerado na nuvem via EAS Build (`preview`) |
