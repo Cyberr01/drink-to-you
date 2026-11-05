@@ -13,14 +13,18 @@ const REMINDER_MESSAGES = [
   'Pausa rápida para se hidratar.',
 ];
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
+
+let webReminderTimer: ReturnType<typeof setInterval> | null = null;
 
 function parseTimeToMinutes(time: string) {
   const [hours, minutes] = time.split(':').map(Number);
@@ -45,7 +49,13 @@ async function ensureAndroidChannel() {
   });
 }
 
-export async function requestNotificationPermission() {
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    if (typeof window === 'undefined' || !('Notification' in window)) return false;
+    if (window.Notification.permission === 'granted') return true;
+    const result = await window.Notification.requestPermission();
+    return result === 'granted';
+  }
   const current = await Notifications.getPermissionsAsync();
   if (current.granted) return true;
   const requested = await Notifications.requestPermissionsAsync();
@@ -53,6 +63,13 @@ export async function requestNotificationPermission() {
 }
 
 export async function cancelReminders() {
+  if (Platform.OS === 'web') {
+    if (webReminderTimer) {
+      clearInterval(webReminderTimer);
+      webReminderTimer = null;
+    }
+    return;
+  }
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
@@ -71,6 +88,46 @@ async function scheduleReminderAt(totalMinutes: number, index: number) {
   });
 }
 
+function scheduleWebReminders(preferences: Preferences) {
+  if (webReminderTimer) clearInterval(webReminderTimer);
+  const intervalMs = preferences.reminder_interval_minutes * 60 * 1000;
+  const startMin = parseTimeToMinutes(preferences.reminder_start_time);
+  const endMin = parseTimeToMinutes(preferences.reminder_end_time);
+
+  webReminderTimer = setInterval(() => {
+    const now = new Date();
+    const currentMin = now.getHours() * MINUTES_PER_HOUR + now.getMinutes();
+    if (currentMin >= startMin && currentMin <= endMin && 'Notification' in window && window.Notification.permission === 'granted') {
+      const msg = REMINDER_MESSAGES[Math.floor(Math.random() * REMINDER_MESSAGES.length)];
+      new window.Notification('Drink To You', { body: msg, icon: '/icon.png' });
+    }
+  }, intervalMs);
+}
+
+/** Envia uma notificação imediata para o usuário testar se os alertas estão funcionando no aparelho. */
+export async function sendTestNotification(): Promise<boolean> {
+  const granted = await requestNotificationPermission();
+  if (!granted) return false;
+
+  if (Platform.OS === 'web') {
+    new window.Notification('Drink To You 💧', {
+      body: 'Notificações ativas! Vamos manter sua hidratação em dia.',
+      icon: '/icon.png',
+    });
+    return true;
+  }
+
+  await ensureAndroidChannel();
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Drink To You 💧',
+      body: 'Notificações ativas! Vamos manter sua hidratação em dia.',
+    },
+    trigger: null,
+  });
+  return true;
+}
+
 /** Reagenda todos os lembretes diários conforme as preferências. Retorna false se faltar permissão. */
 export async function syncReminders(preferences: Preferences) {
   await cancelReminders();
@@ -78,6 +135,11 @@ export async function syncReminders(preferences: Preferences) {
 
   const granted = await requestNotificationPermission();
   if (!granted) return false;
+
+  if (Platform.OS === 'web') {
+    scheduleWebReminders(preferences);
+    return true;
+  }
 
   await ensureAndroidChannel();
   const times = buildReminderMinutes(preferences);

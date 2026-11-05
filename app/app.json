@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.drinktoyou.app",
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#102B46",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -29,7 +30,14 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Drink To You",
+      "shortName": "Drink To You",
+      "lang": "pt-BR",
+      "themeColor": "#102B46",
+      "backgroundColor": "#102B46",
+      "display": "standalone",
+      "orientation": "portrait"
     },
     "plugins": [
       [

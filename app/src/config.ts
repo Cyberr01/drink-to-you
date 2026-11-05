@@ -1,4 +1,4 @@
-const DEFAULT_API_URL = 'http://localhost:3000/api';
+const DEFAULT_API_URL = 'https://drink-to-you-api.onrender.com/api';
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL;
 

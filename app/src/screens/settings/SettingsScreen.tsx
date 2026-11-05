@@ -1,13 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Chip, HelperText, Snackbar, Switch, Text, TextInput } from 'react-native-paper';
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  ActivityIndicator,
+  Button,
+  Chip,
+  HelperText,
+  Snackbar,
+  Switch,
+  Text,
+  TextInput,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StateMessage } from '../../components/common/StateMessage';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useFetch } from '../../hooks/useFetch';
 import { feedback } from '../../services/feedback';
-import { syncReminders } from '../../services/notificationService';
+import { sendTestNotification, syncReminders } from '../../services/notificationService';
 import { preferencesService } from '../../services/preferencesService';
 import { radius, spacing } from '../../theme/layout';
 import { TIME_PATTERN } from '../../utils/format';
@@ -29,6 +46,22 @@ export function SettingsScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!preferences) return;
@@ -79,7 +112,23 @@ export function SettingsScreen() {
     }
   }
 
+  async function handleTestNotification() {
+    const sent = await sendTestNotification();
+    if (sent) {
+      feedback.tap();
+      setSnackbarMessage('Notificação de teste enviada! 🔔');
+    } else {
+      setSnackbarMessage('Permita notificações nas configurações do aparelho/navegador.');
+    }
+  }
+
   function confirmSignOut() {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Deseja realmente sair da conta?')) {
+        signOut();
+      }
+      return;
+    }
     Alert.alert('Sair da conta', 'Deseja realmente sair?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Sair', style: 'destructive', onPress: signOut },
@@ -110,89 +159,130 @@ export function SettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.title, { color: colors.navy }]}>Configurações</Text>
-
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.userName, { color: colors.navy }]}>{user?.name}</Text>
-          <Text style={{ color: colors.muted }}>{user?.email}</Text>
-        </View>
-
-        <Text style={[styles.section, { color: colors.navy }]}>Meta diária</Text>
-        <TextInput
-          label="Meta (ml)"
-          mode="outlined"
-          keyboardType="number-pad"
-          value={goal}
-          onChangeText={setGoal}
-        />
-        <Text style={[styles.disclaimer, { color: colors.muted }]}>
-          A meta é uma preferência pessoal e não uma recomendação médica.
-        </Text>
-
-        <Text style={[styles.section, { color: colors.navy }]}>Lembretes</Text>
-        <View style={[styles.card, styles.switchRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.flex}>
-            <Text style={[styles.switchTitle, { color: colors.text }]}>Ativar lembretes</Text>
-            <Text style={{ color: colors.muted, fontSize: 12 }}>Notificações para você se hidratar</Text>
-          </View>
-          <Switch value={remindersEnabled} onValueChange={setRemindersEnabled} />
-        </View>
-
-        {remindersEnabled ? (
-          <>
-            <Text style={[styles.label, { color: colors.muted }]}>Intervalo</Text>
-            <View style={styles.chips}>
-              {INTERVAL_OPTIONS_MIN.map((option) => (
-                <Chip key={option} selected={interval === option} onPress={() => setInterval(option)}>
-                  {option} min
-                </Chip>
-              ))}
-            </View>
-            <View style={styles.timeRow}>
-              <TextInput
-                label="Início"
-                mode="outlined"
-                value={startTime}
-                onChangeText={setStartTime}
-                placeholder="08:00"
-                style={styles.flex}
-              />
-              <TextInput
-                label="Fim"
-                mode="outlined"
-                value={endTime}
-                onChangeText={setEndTime}
-                placeholder="22:00"
-                style={styles.flex}
-              />
-            </View>
-          </>
-        ) : null}
-
-        <Text style={[styles.section, { color: colors.navy }]}>Aparência</Text>
-        <View style={[styles.card, styles.switchRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.switchTitle, styles.flex, { color: colors.text }]}>Modo escuro</Text>
-          <Switch value={isDark} onValueChange={setDarkMode} />
-        </View>
-
-        <HelperText type="error" visible={!!formError}>
-          {formError}
-        </HelperText>
-        <Button mode="contained" onPress={handleSave} loading={isSaving} disabled={isSaving} contentStyle={styles.buttonContent}>
-          Salvar configurações
-        </Button>
-        <Button
-          mode="outlined"
-          icon="logout"
-          textColor={colors.danger}
-          onPress={confirmSignOut}
-          style={styles.logout}
-          contentStyle={styles.buttonContent}
+      <KeyboardAvoidingView
+        style={styles.safe}
+        behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 24 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + spacing.xl },
+          ]}
+          keyboardShouldPersistTaps="handled"
         >
-          Sair da conta
-        </Button>
-      </ScrollView>
+          <Text style={[styles.title, { color: colors.navy }]}>Configurações</Text>
+
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.userName, { color: colors.navy }]}>{user?.name}</Text>
+            <Text style={{ color: colors.muted }}>{user?.email}</Text>
+          </View>
+
+          <Text style={[styles.section, { color: colors.navy }]}>Meta diária</Text>
+          <TextInput
+            label="Meta (ml)"
+            mode="outlined"
+            keyboardType="number-pad"
+            value={goal}
+            onChangeText={setGoal}
+          />
+          <Text style={[styles.disclaimer, { color: colors.muted }]}>
+            A meta é uma preferência pessoal e não uma recomendação médica.
+          </Text>
+
+          <Text style={[styles.section, { color: colors.navy }]}>Lembretes</Text>
+          <View
+            style={[
+              styles.card,
+              styles.switchRow,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.flex}>
+              <Text style={[styles.switchTitle, { color: colors.text }]}>Ativar lembretes</Text>
+              <Text style={{ color: colors.muted, fontSize: 12 }}>
+                Notificações para você se hidratar
+              </Text>
+            </View>
+            <Switch value={remindersEnabled} onValueChange={setRemindersEnabled} />
+          </View>
+
+          {remindersEnabled ? (
+            <>
+              <Text style={[styles.label, { color: colors.muted }]}>Intervalo</Text>
+              <View style={styles.chips}>
+                {INTERVAL_OPTIONS_MIN.map((option) => (
+                  <Chip key={option} selected={interval === option} onPress={() => setInterval(option)}>
+                    {option} min
+                  </Chip>
+                ))}
+              </View>
+              <View style={styles.timeRow}>
+                <TextInput
+                  label="Início"
+                  mode="outlined"
+                  value={startTime}
+                  onChangeText={setStartTime}
+                  placeholder="08:00"
+                  style={styles.flex}
+                />
+                <TextInput
+                  label="Fim"
+                  mode="outlined"
+                  value={endTime}
+                  onChangeText={setEndTime}
+                  placeholder="22:00"
+                  style={styles.flex}
+                />
+              </View>
+            </>
+          ) : null}
+
+          <Button
+            mode="outlined"
+            icon="bell-ring-outline"
+            onPress={handleTestNotification}
+            style={styles.testButton}
+          >
+            Testar notificação agora
+          </Button>
+
+          <Text style={[styles.section, { color: colors.navy }]}>Aparência</Text>
+          <View
+            style={[
+              styles.card,
+              styles.switchRow,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.switchTitle, styles.flex, { color: colors.text }]}>Modo escuro</Text>
+            <Switch value={isDark} onValueChange={setDarkMode} />
+          </View>
+
+          <HelperText type="error" visible={!!formError}>
+            {formError}
+          </HelperText>
+          <Button
+            mode="contained"
+            onPress={handleSave}
+            loading={isSaving}
+            disabled={isSaving}
+            contentStyle={styles.buttonContent}
+          >
+            Salvar configurações
+          </Button>
+          <Button
+            mode="outlined"
+            icon="logout"
+            textColor={colors.danger}
+            onPress={confirmSignOut}
+            style={styles.logout}
+            contentStyle={styles.buttonContent}
+          >
+            Sair da conta
+          </Button>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Snackbar visible={!!snackbarMessage} onDismiss={() => setSnackbarMessage(null)} duration={3000}>
         {snackbarMessage}
       </Snackbar>
@@ -204,7 +294,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center' },
-  content: { padding: spacing.md, paddingBottom: spacing.xl, maxWidth: 560, width: '100%', alignSelf: 'center' },
+  content: {
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+  },
   title: { fontSize: 24, fontWeight: '800', marginBottom: spacing.md },
   card: { borderRadius: radius.lg, borderWidth: 1, padding: spacing.md },
   userName: { fontSize: 18, fontWeight: '800' },
@@ -215,6 +311,7 @@ const styles = StyleSheet.create({
   label: { marginTop: spacing.md, marginBottom: spacing.sm, fontSize: 13 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   timeRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  testButton: { marginTop: spacing.md },
   buttonContent: { paddingVertical: 6 },
   logout: { marginTop: spacing.sm },
 });

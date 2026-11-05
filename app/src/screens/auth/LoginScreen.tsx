@@ -4,6 +4,7 @@ import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthLayout } from '../../components/common/AuthLayout';
 import { BrandHeader } from '../../components/common/BrandHeader';
+import { IosInstallBanner } from '../../components/common/IosInstallBanner';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useSlowHint } from '../../hooks/useSlowHint';
@@ -44,6 +45,7 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <AuthLayout>
+      <IosInstallBanner />
       <BrandHeader />
       <TextInput
         label="E-mail"
@@ -73,7 +75,13 @@ export function LoginScreen({ navigation }: Props) {
       <HelperText type="error" visible={!!error}>
         {error}
       </HelperText>
-      <Button mode="contained" onPress={handleLogin} loading={isLoading} disabled={isLoading} contentStyle={styles.buttonContent}>
+      <Button
+        mode="contained"
+        onPress={handleLogin}
+        loading={isLoading}
+        disabled={isLoading}
+        contentStyle={styles.buttonContent}
+      >
         Entrar
       </Button>
       {isSlow ? (
