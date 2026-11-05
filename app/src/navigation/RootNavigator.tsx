@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../screens/auth/OnboardingScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { ChallengeDetailsScreen } from '../screens/challenges/ChallengeDetailsScreen';
 import { EntryDetailsScreen } from '../screens/details/EntryDetailsScreen';
 import { MainTabs } from './MainTabs';
 import { RootStackParamList } from './types';
@@ -54,7 +55,20 @@ export function RootNavigator() {
             <Stack.Screen
               name="EntryDetails"
               component={EntryDetailsScreen}
-              options={{ headerShown: true, title: 'Detalhes do registro', headerBackTitle: 'Voltar' }}
+              options={{
+                headerShown: true,
+                title: 'Detalhes do registro',
+                headerBackTitle: 'Voltar',
+              }}
+            />
+            <Stack.Screen
+              name="ChallengeDetails"
+              component={ChallengeDetailsScreen}
+              options={{
+                headerShown: true,
+                title: 'Sala de Desafio',
+                headerBackTitle: 'Voltar',
+              }}
             />
           </>
         )}

@@ -2,7 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Text } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../../hooks/useAppTheme';
+import { radius } from '../../theme/layout';
 import { formatMl } from '../../utils/format';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -16,15 +18,16 @@ interface ProgressRingProps {
   size?: number;
 }
 
-export function ProgressRing({ progress, consumedMl, goalMl, size = 230 }: ProgressRingProps) {
+export function ProgressRing({ progress, consumedMl, goalMl, size = 236 }: ProgressRingProps) {
   const { colors } = useAppTheme();
   const animatedProgress = useRef(new Animated.Value(0)).current;
-  const radius = (size - STROKE_WIDTH) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const ringRadius = (size - STROKE_WIDTH) / 2;
+  const circumference = 2 * Math.PI * ringRadius;
+  const goalReached = progress >= 1;
 
   useEffect(() => {
     Animated.timing(animatedProgress, {
-      toValue: progress,
+      toValue: Math.min(progress, 1),
       duration: ANIMATION_MS,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
@@ -36,19 +39,24 @@ export function ProgressRing({ progress, consumedMl, goalMl, size = 230 }: Progr
     outputRange: [circumference, 0],
   });
 
+  const rawPercent = goalMl > 0 ? Math.round((consumedMl / goalMl) * 100) : 0;
+
   return (
-    <View style={{ width: size, height: size }} accessibilityLabel={`${Math.round(progress * 100)}% da meta`}>
+    <View
+      style={{ width: size, height: size }}
+      accessibilityLabel={`${rawPercent}% da meta`}
+    >
       <Svg width={size} height={size}>
         <Defs>
           <LinearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={colors.accent} />
-            <Stop offset="1" stopColor={colors.primary} />
+            <Stop offset="0" stopColor={goalReached ? '#4CC790' : colors.accent} />
+            <Stop offset="1" stopColor={goalReached ? colors.success : colors.primary} />
           </LinearGradient>
         </Defs>
         <Circle
           cx={size / 2}
           cy={size / 2}
-          r={radius}
+          r={ringRadius}
           stroke={colors.surfaceAlt}
           strokeWidth={STROKE_WIDTH}
           fill="none"
@@ -56,7 +64,7 @@ export function ProgressRing({ progress, consumedMl, goalMl, size = 230 }: Progr
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
-          r={radius}
+          r={ringRadius}
           stroke="url(#ringGradient)"
           strokeWidth={STROKE_WIDTH}
           strokeLinecap="round"
@@ -68,7 +76,20 @@ export function ProgressRing({ progress, consumedMl, goalMl, size = 230 }: Progr
         />
       </Svg>
       <View style={styles.center}>
-        <Text style={[styles.percent, { color: colors.navy }]}>{Math.round(progress * 100)}%</Text>
+        {goalReached ? (
+          <View style={[styles.badge, { backgroundColor: `${colors.success}22` }]}>
+            <MaterialCommunityIcons name="check-decagram" size={16} color={colors.success} />
+            <Text style={[styles.badgeText, { color: colors.success }]}>Meta batida!</Text>
+          </View>
+        ) : null}
+        <Text
+          style={[
+            styles.percent,
+            { color: goalReached ? colors.success : colors.navy },
+          ]}
+        >
+          {rawPercent}%
+        </Text>
         <Text style={[styles.amount, { color: colors.text }]}>{formatMl(consumedMl)}</Text>
         <Text style={[styles.goal, { color: colors.muted }]}>de {formatMl(goalMl)}</Text>
       </View>
@@ -78,7 +99,17 @@ export function ProgressRing({ progress, consumedMl, goalMl, size = 230 }: Progr
 
 const styles = StyleSheet.create({
   center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
-  percent: { fontSize: 44, fontWeight: '800', lineHeight: 52 },
-  amount: { fontSize: 18, fontWeight: '700' },
-  goal: { fontSize: 14 },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    marginBottom: 4,
+  },
+  badgeText: { fontSize: 11, fontWeight: '800' },
+  percent: { fontSize: 42, fontWeight: '800', lineHeight: 48 },
+  amount: { fontSize: 17, fontWeight: '700' },
+  goal: { fontSize: 13 },
 });
