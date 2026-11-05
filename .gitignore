@@ -1,5 +1,7 @@
-# ===== Dependências =====
-node_modules/
+# ===== Dependências (apenas pastas reais de pacotes, sem afetar assets estáticos do PWA) =====
+/node_modules/
+app/node_modules/
+api/node_modules/
 
 # ===== Variáveis de ambiente e segredos (NUNCA versionar) =====
 .env
@@ -20,18 +22,23 @@ GoogleService-Info.plist
 *.sqlite3
 
 # ===== Builds e artefatos =====
-dist/
-build/
+app/dist/
+/build/
+app/build/
+api/build/
 web-build/
 *.apk
 *.aab
 *.ipa
 
+# Garante que todos os assets estáticos do PWA (fontes .ttf e ícones) sejam versionados
+!api/public/**
+
 # ===== Expo / React Native =====
 .expo/
 .expo-shared/
-android/
-ios/
+app/android/
+app/ios/
 
 # ===== Logs =====
 logs/

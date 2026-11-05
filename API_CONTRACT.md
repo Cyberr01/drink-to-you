@@ -9,10 +9,11 @@ Erros seguem o formato `{ "message": "texto" }` (validações incluem também `f
 | Código | Uso |
 |---|---|
 | 200 / 201 / 204 | Sucesso / criado / sem conteúdo |
-| 400 | Dados inválidos |
+| 400 | Dados inválidos ou regra anti-burla não atendida |
 | 401 | Token ausente, inválido ou credenciais incorretas |
+| 403 | Entrada bloqueada após início da sala |
 | 404 | Recurso não encontrado (ou de outro usuário) |
-| 409 | E-mail já cadastrado |
+| 409 | E-mail já cadastrado ou check-in já realizado no dia |
 
 ## Autenticação
 
@@ -42,28 +43,6 @@ Corpo de criação/edição:
 { "amount_ml": 250, "note": "Manhã" }
 ```
 
-`amount_ml` entre 1 e 5000; `note` opcional (até 200 caracteres).
-
-Resposta de um registro:
-
-```json
-{ "id": 1, "amount_ml": 250, "created_at": "2026-11-04T12:30:00.000Z", "note": "Manhã" }
-```
-
-Resumo do dia:
-
-```json
-{
-  "date": "2026-11-05",
-  "goal_ml": 2000,
-  "consumed_ml": 400,
-  "remaining_ml": 1600,
-  "progress": 0.2,
-  "entries_count": 2,
-  "streak_days": 2
-}
-```
-
 ## Preferências 🔒
 
 | Método | Endpoint | Descrição |
@@ -71,18 +50,49 @@ Resumo do dia:
 | GET | `/preferences` | Consulta as preferências |
 | PUT | `/preferences` | Atualiza as preferências |
 
+## Salas de Desafio e Duplas (GymRats + Duolingo) 🔒
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/challenges?tz=` | Lista as salas do usuário com pontuação, colocação e chama coletiva |
+| POST | `/challenges` | Cria nova sala e gera código de convite único (`AGUA-XXXX`) |
+| POST | `/challenges/join` | Entra em uma sala pelo `{ code }` (respeitando `lock_after_start`) |
+| GET | `/challenges/:id?tz=` | Detalha sala, ranking de membros, chama coletiva, elegibilidade do dia e mural de fotos |
+| POST | `/challenges/:id/checkins` | Registra check-in diário (+1 ponto) validando meta batida, ≥ 2 registros no dia e foto |
+| POST | `/challenges/:id/checkins/:checkinId/react` | Alterna reação de incentivo (`💧`) em um check-in |
+| DELETE | `/challenges/:id/leave` | Sai da sala a qualquer momento (`204`) |
+
+Corpo de criação de sala:
+
 ```json
 {
-  "daily_goal_ml": 2000,
-  "reminders_enabled": true,
-  "reminder_interval_minutes": 60,
-  "reminder_start_time": "08:00",
-  "reminder_end_time": "22:00"
+  "name": "Desafio 60 Dias Firma",
+  "description": "Meta diária comprovada com foto!",
+  "prize": "Almoço pago para o 1º lugar (combinado entre amigos)",
+  "daily_goal_ml": 2500,
+  "start_date": "2026-11-05",
+  "end_date": "2027-01-04",
+  "lock_after_start": true
 }
 ```
 
-Regras: meta entre 500 e 10000; intervalo entre 15 e 720 minutos; horários `HH:MM`.
+Corpo de check-in:
+
+```json
+{
+  "photo_data": "data:image/jpeg;base64,...",
+  "caption": "Garrafa da tarde concluída!",
+  "tz": "America/Sao_Paulo"
+}
+```
+
+## Conquistas Pessoais e Nível 🔒
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/achievements?tz=` | Calcula nível, XP, estatísticas globais e progresso nas 15 conquistas (Bronze a Diamante/Lendária) |
 
 ## Outros
 
 - `GET /health` → `{ "status": "ok" }` (usado pelo Render).
+- `GET /*` (exceto `/api/*` e arquivos estáticos) → entrega o Web App / PWA instalável.

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { feedback } from '../services/feedback';
 import { waterService } from '../services/waterService';
-import { TodaySummary, WaterEntryInput, WeeklySummary } from '../types';
+import { TodaySummary, WaterEntry, WaterEntryInput, WeeklySummary } from '../types';
 
 export function useWaterSummary() {
   const [today, setToday] = useState<TodaySummary | null>(null);
@@ -11,7 +11,10 @@ export function useWaterSummary() {
 
   const reload = useCallback(async () => {
     try {
-      const [todayData, weeklyData] = await Promise.all([waterService.today(), waterService.weekly()]);
+      const [todayData, weeklyData] = await Promise.all([
+        waterService.today(),
+        waterService.weekly(),
+      ]);
       setToday(todayData);
       setWeekly(weeklyData);
       setError(null);
@@ -23,13 +26,23 @@ export function useWaterSummary() {
   }, []);
 
   const addEntry = useCallback(
-    async (input: WaterEntryInput) => {
-      await waterService.create(input);
+    async (input: WaterEntryInput): Promise<WaterEntry> => {
+      const created = await waterService.create(input);
       feedback.success();
+      await reload();
+      return created;
+    },
+    [reload],
+  );
+
+  const undoEntry = useCallback(
+    async (entryId: number) => {
+      await waterService.remove(entryId);
+      feedback.tap();
       await reload();
     },
     [reload],
   );
 
-  return { today, weekly, isLoading, error, reload, addEntry };
+  return { today, weekly, isLoading, error, reload, addEntry, undoEntry };
 }

@@ -26,3 +26,50 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   reminder_start_time       TEXT NOT NULL DEFAULT '08:00',
   reminder_end_time         TEXT NOT NULL DEFAULT '22:00'
 );
+
+CREATE TABLE IF NOT EXISTS challenges (
+  id               SERIAL PRIMARY KEY,
+  code             TEXT NOT NULL UNIQUE,
+  name             TEXT NOT NULL,
+  description      TEXT,
+  prize            TEXT,
+  daily_goal_ml    INTEGER NOT NULL DEFAULT 2000 CHECK (daily_goal_ml >= 500 AND daily_goal_ml <= 10000),
+  start_date       TEXT NOT NULL,
+  end_date         TEXT NOT NULL,
+  lock_after_start BOOLEAN NOT NULL DEFAULT TRUE,
+  creator_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS challenge_members (
+  id           SERIAL PRIMARY KEY,
+  challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (challenge_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenge_members_user
+  ON challenge_members (user_id);
+
+CREATE TABLE IF NOT EXISTS challenge_checkins (
+  id           SERIAL PRIMARY KEY,
+  challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  checkin_date TEXT NOT NULL,
+  consumed_ml  INTEGER NOT NULL CHECK (consumed_ml > 0),
+  photo_data   TEXT NOT NULL,
+  caption      TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (challenge_id, user_id, checkin_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenge_checkins_challenge_date
+  ON challenge_checkins (challenge_id, checkin_date DESC, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS challenge_reactions (
+  checkin_id INTEGER NOT NULL REFERENCES challenge_checkins(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (checkin_id, user_id)
+);
