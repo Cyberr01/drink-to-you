@@ -1,18 +1,9 @@
 const { query } = require('../database/pool');
+const { todayInTimezone, shiftDay } = require('../utils/date');
 const preferencesService = require('./preferencesService');
 
 const HISTORY_DAYS = 90;
 const WEEK_DAYS = 7;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-function todayInTimezone(timezone) {
-  return new Date().toLocaleDateString('en-CA', { timeZone: timezone });
-}
-
-function shiftDay(dayString, offsetDays) {
-  const shifted = new Date(Date.parse(`${dayString}T00:00:00Z`) + offsetDays * MS_PER_DAY);
-  return shifted.toISOString().slice(0, 10);
-}
 
 async function totalsByDay(userId, timezone) {
   const result = await query(
