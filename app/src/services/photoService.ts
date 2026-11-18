@@ -1,88 +1,100 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 
-const MAX_WEB_DIMENSION = 420;
+export type PhotoSource = 'camera' | 'gallery';
 
-function pickAndResizeOnWeb(useCamera: boolean): Promise<string | null> {
+const MAX_WEB_DIMENSION = 420;
+const WEB_JPEG_QUALITY = 0.72;
+
+const NATIVE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['images'],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.35,
+  base64: true,
+};
+
+const PERMISSION_DENIED_MESSAGES: Record<PhotoSource, string> = {
+  camera: 'Permita o uso da câmera nas configurações do aparelho.',
+  gallery: 'Permita o acesso às fotos nas configurações do aparelho.',
+};
+
+/* ---------- Web / PWA ---------- */
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Formato de imagem inválido.'));
+    image.src = dataUrl;
+  });
+}
+
+/** Reduz a imagem para no máximo MAX_WEB_DIMENSION px e converte para JPEG comprimido. */
+function compressImage(image: HTMLImageElement, originalDataUrl: string) {
+  const scale = Math.min(1, MAX_WEB_DIMENSION / Math.max(image.width, image.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+
+  const context = canvas.getContext('2d');
+  if (!context) return originalDataUrl;
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', WEB_JPEG_QUALITY);
+}
+
+function selectFileOnWeb(source: PhotoSource): Promise<File | null> {
   return new Promise((resolve) => {
-    if (typeof document === 'undefined') {
-      resolve(null);
-      return;
-    }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    if (useCamera) {
-      input.setAttribute('capture', 'environment');
-    }
-
-    input.onchange = () => {
-      const file = input.files?.[0];
-      if (!file) {
-        resolve(null);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new window.Image();
-        img.onload = () => {
-          const scale = Math.min(1, MAX_WEB_DIMENSION / Math.max(img.width, img.height));
-          const width = Math.round(img.width * scale);
-          const height = Math.round(img.height * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            resolve(reader.result as string);
-            return;
-          }
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.72));
-        };
-        img.onerror = () => resolve(null);
-        img.src = reader.result as string;
-      };
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
-    };
-
+    if (source === 'camera') input.setAttribute('capture', 'environment');
+    input.onchange = () => resolve(input.files?.[0] ?? null);
     input.click();
   });
 }
 
-export async function pickCheckinPhoto(source: 'camera' | 'gallery'): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return pickAndResizeOnWeb(source === 'camera');
-  }
+async function pickPhotoOnWeb(source: PhotoSource) {
+  if (typeof document === 'undefined') return null;
+  const file = await selectFileOnWeb(source);
+  if (!file) return null;
 
-  if (source === 'camera') {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) {
-      throw new Error('Permita o uso da câmera nas configurações do aparelho.');
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.35,
-      base64: true,
-    });
-    if (result.canceled || !result.assets[0]?.base64) return null;
-    return `data:image/jpeg;base64,${result.assets[0].base64}`;
-  }
+  const dataUrl = await readFileAsDataUrl(file);
+  const image = await loadImage(dataUrl);
+  return compressImage(image, dataUrl);
+}
 
-  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!perm.granted) {
-    throw new Error('Permita o acesso às fotos nas configurações do aparelho.');
-  }
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.35,
-    base64: true,
-  });
-  if (result.canceled || !result.assets[0]?.base64) return null;
-  return `data:image/jpeg;base64,${result.assets[0].base64}`;
+/* ---------- Android / iOS nativo ---------- */
+
+async function requestNativePermission(source: PhotoSource) {
+  const permission =
+    source === 'camera'
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) throw new Error(PERMISSION_DENIED_MESSAGES[source]);
+}
+
+async function pickPhotoOnNative(source: PhotoSource) {
+  await requestNativePermission(source);
+  const result =
+    source === 'camera'
+      ? await ImagePicker.launchCameraAsync(NATIVE_PICKER_OPTIONS)
+      : await ImagePicker.launchImageLibraryAsync(NATIVE_PICKER_OPTIONS);
+
+  const base64 = result.canceled ? null : result.assets[0]?.base64;
+  return base64 ? `data:image/jpeg;base64,${base64}` : null;
+}
+
+/** Abre a câmera ou a galeria e devolve a foto como Data URI JPEG (ou null se cancelado). */
+export function pickCheckinPhoto(source: PhotoSource): Promise<string | null> {
+  return Platform.OS === 'web' ? pickPhotoOnWeb(source) : pickPhotoOnNative(source);
 }

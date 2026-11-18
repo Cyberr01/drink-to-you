@@ -67,7 +67,7 @@ drink-to-you/
 │   ├── public/               # Manifesto, ícone e fontes estáticas do PWA
 │   └── src/
 │       ├── screens/          # auth, home, challenges, achievements, history, details, settings
-│       ├── components/       # common, dashboard, water
+│       ├── components/       # common, challenges, dashboard, water
 │       ├── hooks/            # useAuth, useFetch, useWeather, useWaterSummary, useSlowHint...
 │       ├── services/         # api, auth, água, desafios, conquistas, fotos, clima, notificações...
 │       ├── context/          # AuthContext, ThemeContext

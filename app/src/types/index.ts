@@ -106,18 +106,22 @@ export interface ChallengeCheckinItem {
   reacted_by_me: boolean;
 }
 
+export type ChallengeInfo = Omit<ChallengeSummary, 'my_points' | 'checked_in_today'>;
+
+export interface MyCheckinStatus {
+  date: string;
+  consumed_ml: number;
+  entries_count: number;
+  required_entries: number;
+  goal_reached: boolean;
+  enough_entries: boolean;
+  checked_in_today: boolean;
+  can_checkin: boolean;
+}
+
 export interface ChallengeDetailsResponse {
-  challenge: Omit<ChallengeSummary, 'my_points' | 'checked_in_today'>;
-  my_today: {
-    date: string;
-    consumed_ml: number;
-    entries_count: number;
-    required_entries: number;
-    goal_reached: boolean;
-    enough_entries: boolean;
-    checked_in_today: boolean;
-    can_checkin: boolean;
-  };
+  challenge: ChallengeInfo;
+  my_today: MyCheckinStatus;
   ranking: ChallengeRankingItem[];
   checkins: ChallengeCheckinItem[];
 }
