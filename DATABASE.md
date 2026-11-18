@@ -68,7 +68,7 @@ Restrição única: `(challenge_id, user_id)`.
 | user_id | INTEGER, FK → users(id) | Autor do check-in (`ON DELETE CASCADE`) |
 | checkin_date | TEXT (`YYYY-MM-DD`) | Dia local comprovado (máximo 1 ponto por dia) |
 | consumed_ml | INTEGER (> 0) | Volume registrado no momento do check-in |
-| photo_data | TEXT | Foto comprimida em Data URI JPEG (`<= 900 KB`) |
+| photo_data | TEXT | Foto comprimida no app e enviada como Data URI (`data:image/...`, até 2,5 MB em texto) |
 | caption | TEXT | Legenda opcional |
 | created_at | TIMESTAMPTZ | Horário do envio |
 

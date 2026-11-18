@@ -9,9 +9,9 @@ Erros seguem o formato `{ "message": "texto" }` (validações incluem também `f
 | Código | Uso |
 |---|---|
 | 200 / 201 / 204 | Sucesso / criado / sem conteúdo |
-| 400 | Dados inválidos ou regra anti-burla não atendida |
+| 400 | Dados inválidos, regra anti-burla não atendida ou sala encerrada/fechada para novos membros |
 | 401 | Token ausente, inválido ou credenciais incorretas |
-| 403 | Entrada bloqueada após início da sala |
+| 403 | Usuário não participa da sala de desafio consultada |
 | 404 | Recurso não encontrado (ou de outro usuário) |
 | 409 | E-mail já cadastrado ou check-in já realizado no dia |
 

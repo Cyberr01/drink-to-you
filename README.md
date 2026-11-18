@@ -29,7 +29,17 @@ O Drink To You une controle diário, gamificação pessoal e incentivo social:
 
 ## Justificativa pessoal
 
-> **PREENCHER PELO GRUPO:** cada integrante deve escrever, com suas palavras, por que o aplicativo seria útil no seu dia a dia ou trabalho (exigência do professor).
+**Diogo**
+
+> Passo boa parte do dia na frente do computador e, quando estou focado em alguma tarefa, simplesmente esqueço que existo. Já aconteceu de eu olhar para a garrafa no fim do expediente e perceber que ela estava praticamente cheia, do jeito que eu tinha enchido de manhã. O Drink To You me ajuda justamente nisso: o lembrete aparece na hora certa, eu registro em um toque e consigo ver, de verdade, quanto bebi no dia. Ver a sequência de dias crescendo virou quase um jogo pessoal para não "quebrar a corrente".
+
+**Jean**
+
+> Eu sou do tipo que só se mexe quando tem alguém competindo comigo. No trabalho, o pessoal fez um desafio de treino no GymRats e eu nunca fui tão constante na academia quanto naqueles 60 dias, porque ninguém queria ficar no fim do ranking. Com água sempre foi diferente: eu sabia que precisava beber mais, mas não tinha nada me puxando. As salas de desafio do app trazem exatamente essa pressão saudável. Ter que mandar a foto do check-in e ver os colegas incentivando no mural faz eu lembrar da garrafa ao longo do dia, e não só quando já estou com sede.
+
+**Vitor**
+
+> Minha rotina é corrida: trabalho durante o dia e venho direto para a faculdade à noite, muitas vezes sem tempo nem de jantar direito. Nesse ritmo, beber água acaba ficando para depois, e o "depois" nunca chega. O que mais me ajuda no Drink To You é o histórico: consigo olhar a semana e perceber em quais dias eu deixei de lado, normalmente os mais puxados. Os lembretes dentro do horário que eu escolho não me atrapalham nas aulas, e as conquistas me dão um motivo a mais para abrir o app todo dia, mesmo nos dias mais cansativos.
 
 ## Como foi feito
 
@@ -37,7 +47,7 @@ O Drink To You une controle diário, gamificação pessoal e incentivo social:
 
 | Camada | Tecnologia |
 |---|---|
-| App & PWA | React Native, Expo (SDK 55), React Native Web, TypeScript |
+| App & PWA | React Native 0.88, Expo (SDK 58), React Native Web, TypeScript |
 | Navegação | React Navigation (Native Stack + Bottom Tabs com 5 abas) |
 | Interface | React Native Paper, `expo-linear-gradient`, `StyleSheet` próprio, `react-native-svg` |
 | Estado global | Context API (`AuthContext`, `ThemeContext`) |
@@ -221,4 +231,4 @@ npx expo start
 
 ## Equipe
 
-Projeto desenvolvido por grupo de 3 integrantes — **PREENCHER nomes**.
+Projeto desenvolvido por: **Diogo**, **Jean** e **Vitor**.

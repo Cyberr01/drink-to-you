@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Drink To You — Documento do Projeto</title>
+<meta name="description" content="Documento completo do projeto Drink To You: problema, solução, arquitetura, tecnologias, gamificação, banco de dados, API, distribuição, processo e roteiro de apresentação." />
+<style>
+  :root {
+    --navy: #102B46;
+    --navy-2: #173A5E;
+    --cyan: #1FB6E8;
+    --cyan-soft: #E3F6FD;
+    --emerald: #10B981;
+    --amber: #F59E0B;
+    --rose: #E11D48;
+    --ink: #1E293B;
+    --muted: #64748B;
+    --line: #E2E8F0;
+    --bg: #F6F9FC;
+    --card: #FFFFFF;
+    --bronze: #B7793E;
+    --silver: #8A97A8;
+    --gold: #D4A017;
+    --diamond: #5B8DEF;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  a { color: #0B7FB0; }
+  code {
+    font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+    background: #EEF3F8;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .9em;
+  }
+  pre {
+    background: #0F2236;
+    color: #D7E7F5;
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-size: .88em;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  /* ---------- Capa ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 55%, #0E6A92 100%);
+    color: #fff;
+    padding: 72px 24px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -120px; top: -120px;
+    width: 420px; height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(31,182,232,.35), transparent 70%);
+  }
+  .hero-inner { max-width: 1080px; margin: 0 auto; position: relative; z-index: 1; }
+  .drop {
+    width: 64px; height: 64px;
+    background: var(--cyan);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 10px 30px rgba(31,182,232,.45);
+    margin-bottom: 26px;
+  }
+  .hero h1 { font-size: 3.1rem; margin: 0; letter-spacing: -.5px; }
+  .hero .tagline { font-size: 1.35rem; color: #BFE9F9; margin: 6px 0 22px; font-weight: 500; }
+  .hero p.lead { max-width: 760px; font-size: 1.08rem; color: #E2EEF7; }
+  .pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .pill {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: .9rem;
+  }
+  .hero-meta { margin-top: 28px; font-size: .95rem; color: #BFD6E8; }
+  .hero-meta strong { color: #fff; }
+
+  /* ---------- Layout ---------- */
+  .layout { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 250px 1fr; gap: 36px; padding: 36px 24px 80px; }
+  nav.toc {
+    position: sticky; top: 20px; align-self: start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    font-size: .9rem;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  nav.toc h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 10px; }
+  nav.toc ol { margin: 0; padding-left: 20px; }
+  nav.toc li { margin: 4px 0; }
+  nav.toc a { color: var(--ink); text-decoration: none; }
+  nav.toc a:hover { color: #0B7FB0; }
+
+  main section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 34px 36px;
+    margin-bottom: 26px;
+  }
+  main h2 {
+    margin: 0 0 6px;
+    font-size: 1.65rem;
+    color: var(--navy);
+    display: flex; align-items: center; gap: 12px;
+  }
+  main h2 .num {
+    background: var(--cyan-soft);
+    color: #0B7FB0;
+    font-size: .95rem;
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  main h3 { color: var(--navy-2); margin: 26px 0 10px; font-size: 1.15rem; }
+  .subtitle { color: var(--muted); margin: 0 0 22px; }
+  .slide-hint {
+    margin-top: 20px;
+    background: #FFF8E6;
+    border-left: 4px solid var(--amber);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: .9rem;
+    color: #7A5300;
+  }
+  .slide-hint::before { content: "💡 Sugestão para o slide: "; font-weight: 600; }
+
+  /* ---------- Componentes ---------- */
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    background: #FCFDFE;
+  }
+  .card h4 { margin: 0 0 6px; color: var(--navy); font-size: 1.02rem; }
+  .card p { margin: 0; color: #475569; font-size: .94rem; }
+  .card .icon { font-size: 1.6rem; margin-bottom: 6px; display: block; }
+
+  .stat {
+    text-align: center;
+    padding: 20px 10px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #F2FAFE, #FFFFFF);
+    border: 1px solid #D6EEF9;
+  }
+  .stat .value { font-size: 2.1rem; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .stat .label { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: .93rem; margin: 6px 0 4px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #F1F5F9; color: var(--navy); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .t-bronze { background: var(--bronze); }
+  .t-silver { background: var(--silver); }
+  .t-gold { background: var(--gold); }
+  .t-diamond { background: var(--diamond); }
+  .t-get { background: #0EA5E9; }
+  .t-post { background: var(--emerald); }
+  .t-put { background: var(--amber); }
+  .t-del { background: var(--rose); }
+
+  .callout {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: .95rem;
+  }
+  .callout.info { background: #EAF6FD; border-left: 4px solid var(--cyan); }
+  .callout.ok { background: #E9FBF3; border-left: 4px solid var(--emerald); }
+  .callout.warn { background: #FFF4F4; border-left: 4px solid var(--rose); }
+
+  /* Arquitetura */
+  .arch { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 10px 0; }
+  .arch .layer {
+    width: 100%; max-width: 640px;
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+  }
+  .arch .layer small { display: block; font-weight: 400; opacity: .88; margin-top: 4px; font-size: .86rem; }
+  .arch .l1 { background: linear-gradient(90deg, #0E7FB0, var(--cyan)); }
+  .arch .l2 { background: linear-gradient(90deg, var(--navy), var(--navy-2)); }
+  .arch .l3 { background: linear-gradient(90deg, #0F766E, var(--emerald)); }
+  .arch .arrow { color: var(--muted); font-size: .85rem; padding: 8px 0; text-align: center; }
+  .arch .arrow::before { content: "▼"; display: block; color: var(--cyan); font-size: 1.1rem; }
+  .side-ext {
+    margin-top: 14px; text-align: center; font-size: .9rem; color: var(--muted);
+  }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 10px 0; }
+  .flow .step {
+    flex: 1 1 150px;
+    background: var(--cyan-soft);
+    border: 1px solid #C5E9F8;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: .9rem;
+    text-align: center;
+  }
+  .flow .step b { display: block; color: var(--navy); margin-bottom: 2px; }
+  .flow .sep { align-self: center; color: var(--cyan); font-weight: 700; }
+
+  .timeline { border-left: 3px solid var(--cyan); margin: 10px 0 0 10px; padding-left: 22px; }
+  .timeline .item { position: relative; margin-bottom: 18px; }
+  .timeline .item::before {
+    content: ""; position: absolute; left: -31px; top: 5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--cyan);
+  }
+  .timeline .item h4 { margin: 0; color: var(--navy); font-size: 1rem; }
+  .timeline .item p { margin: 2px 0 0; color: #475569; font-size: .93rem; }
+  .timeline .item code { font-size: .82em; }
+
+  .problem-solution { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ps-col { border-radius: 12px; padding: 20px; }
+  .ps-col.problem { background: #FFF5F5; border: 1px solid #FBD5D5; }
+  .ps-col.solution { background: #EEFBF5; border: 1px solid #BFEBD6; }
+  .ps-col h4 { margin-top: 0; }
+  .ps-col ul { margin: 0; padding-left: 20px; }
+
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li { padding-left: 28px; position: relative; margin: 6px 0; }
+  ul.check li::before { content: "✔"; position: absolute; left: 4px; color: var(--emerald); font-weight: 700; }
+
+  .slides-plan .slide {
+    display: grid; grid-template-columns: 56px 1fr; gap: 14px;
+    border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    background: #FCFDFE;
+  }
+  .slides-plan .slide .n {
+    background: var(--navy); color: #fff; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem;
+    height: 44px;
+  }
+  .slides-plan .slide h4 { margin: 0 0 4px; color: var(--navy); }
+  .slides-plan .slide p { margin: 0; font-size: .92rem; color: #475569; }
+
+  footer { text-align: center; color: var(--muted); font-size: .88rem; padding: 0 24px 40px; }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc { position: static; max-height: none; }
+    .g3, .g4 { grid-template-columns: repeat(2, 1fr); }
+    .problem-solution { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .g2, .g3, .g4 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.3rem; }
+    main section { padding: 24px 20px; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    main section { break-inside: avoid; }
+    .hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= CAPA ================= -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="drop" aria-hidden="true"></div>
+    <h1>Drink To You</h1>
+    <div class="tagline">Sua hidratação, sob controle.</div>
+    <p class="lead">
+      Aplicativo multiplataforma (Android nativo + iOS/Web como PWA) para registrar o consumo de água,
+      acompanhar a meta diária e transformar a hidratação em hábito por meio de
+      <strong>desafios em grupo</strong>, <strong>sequências (streaks)</strong> e <strong>conquistas pessoais</strong>.
+    </p>
+    <div class="pills">
+      <span class="pill">React Native + Expo SDK 58</span>
+      <span class="pill">TypeScript</span>
+      <span class="pill">Node.js + Express 5</span>
+      <span class="pill">PostgreSQL (Supabase)</span>
+      <span class="pill">Render + EAS Build</span>
+      <span class="pill">PWA instalável no iPhone</span>
+    </div>
+    <div class="hero-meta">
+      <strong>Disciplina:</strong> Linguagem de Programação VI &nbsp;·&nbsp;
+      <strong>Equipe:</strong> Diogo, Jean e Vitor &nbsp;·&nbsp;
+      <strong>Período:</strong> Novembro de 2026
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ================= SUMÁRIO ================= -->
+  <nav class="toc" aria-label="Sumário">
+    <h2>Sumário</h2>
+    <ol>
+      <li><a href="#resumo">Resumo executivo</a></li>
+      <li><a href="#problema">Problema e solução</a></li>
+      <li><a href="#funcionalidades">Funcionalidades</a></li>
+      <li><a href="#desafios">Salas de desafio</a></li>
+      <li><a href="#conquistas">Conquistas e níveis</a></li>
+      <li><a href="#arquitetura">Arquitetura</a></li>
+      <li><a href="#tecnologias">Tecnologias</a></li>
+      <li><a href="#estrutura">Estrutura do código</a></li>
+      <li><a href="#banco">Banco de dados</a></li>
+      <li><a href="#api">API REST</a></li>
+      <li><a href="#requisitos">Requisitos da disciplina</a></li>
+      <li><a href="#dispositivo">Recursos do dispositivo</a></li>
+      <li><a href="#ux">UX/UI</a></li>
+      <li><a href="#distribuicao">Distribuição</a></li>
+      <li><a href="#seguranca">Segurança</a></li>
+      <li><a href="#git">Processo e Git</a></li>
+      <li><a href="#problemas">Problemas e soluções</a></li>
+      <li><a href="#testes">Testes e validação</a></li>
+      <li><a href="#limitacoes">Limitações e próximos passos</a></li>
+      <li><a href="#demo">Demonstração</a></li>
+      <li><a href="#roteiro">Roteiro de slides</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1. RESUMO -->
+    <section id="resumo">
+      <h2><span class="num">1</span>Resumo executivo</h2>
+      <p class="subtitle">O projeto em números.</p>
+      <div class="grid g4">
+        <div class="stat"><div class="value">2</div><div class="label">plataformas (APK Android + PWA iOS/Web)</div></div>
+        <div class="stat"><div class="value">21</div><div class="label">endpoints REST (incl. <code>/health</code>)</div></div>
+        <div class="stat"><div class="value">7</div><div class="label">tabelas relacionais no PostgreSQL</div></div>
+        <div class="stat"><div class="value">5</div><div class="label">abas de navegação no app</div></div>
+        <div class="stat"><div class="value">15</div><div class="label">conquistas pessoais (3 lendárias)</div></div>
+        <div class="stat"><div class="value">6</div><div class="label">níveis de progressão por XP</div></div>
+        <div class="stat"><div class="value">4</div><div class="label">recursos nativos do dispositivo</div></div>
+        <div class="stat"><div class="value">35</div><div class="label">cenários de teste de API aprovados</div></div>
+      </div>
+      <div class="callout info" style="margin-top:20px">
+        <strong>Em uma frase:</strong> o Drink To You não é só um lembrete de beber água. Ele combina controle diário,
+        competição amigável entre colegas (inspirada no <em>GymRats</em>), chama coletiva em dupla/grupo (inspirada no <em>Duolingo</em>)
+        e um sistema de conquistas para manter o usuário voltando todos os dias.
+      </div>
+      <div class="slide-hint">Use 4 números grandes (plataformas, endpoints, conquistas, testes) como abertura impactante.</div>
+    </section>
+
+    <!-- 2. PROBLEMA -->
+    <section id="problema">
+      <h2><span class="num">2</span>Problema e solução</h2>
+      <p class="subtitle">Por que o app existe.</p>
+      <div class="problem-solution">
+        <div class="ps-col problem">
+          <h4>😓 Problema</h4>
+          <ul>
+            <li>Muitas pessoas esquecem de beber água ao longo do dia.</li>
+            <li>Não sabem quanto realmente consumiram.</li>
+            <li>Têm dificuldade de manter uma meta diária.</li>
+            <li>Não há histórico organizado da evolução do hábito.</li>
+            <li>Apps que só lembram de beber água caem no esquecimento em poucos dias.</li>
+          </ul>
+        </div>
+        <div class="ps-col solution">
+          <h4>💧 Solução</h4>
+          <ul>
+            <li>Registro em um toque, com meta pessoal e progresso visual.</li>
+            <li>Histórico por dia, gráfico semanal e sequência de dias.</li>
+            <li>Lembretes configuráveis por intervalo e janela de horário.</li>
+            <li><strong>Salas de desafio</strong> com ranking e check-in com foto.</li>
+            <li><strong>Conquistas e níveis</strong> para criar motivo diário de uso.</li>
+          </ul>
+        </div>
+      </div>
+      <h3>Justificativa pessoal</h3>
+      <p class="subtitle" style="margin-bottom:12px">Exigência do professor: cada integrante explica, com suas palavras, por que o aplicativo seria útil no seu dia a dia ou trabalho.</p>
+      <div class="grid g3">
+        <div class="card"><h4>Diogo</h4><p>Passo boa parte do dia na frente do computador e, quando estou focado em alguma tarefa, simplesmente esqueço que existo. Já aconteceu de eu olhar para a garrafa no fim do expediente e perceber que ela estava praticamente cheia, do jeito que eu tinha enchido de manhã. O Drink To You me ajuda justamente nisso: o lembrete aparece na hora certa, eu registro em um toque e consigo ver, de verdade, quanto bebi no dia. Ver a sequência de dias crescendo virou quase um jogo pessoal para não “quebrar a corrente”.</p></div>
+        <div class="card"><h4>Jean</h4><p>Eu sou do tipo que só se mexe quando tem alguém competindo comigo. No trabalho, o pessoal fez um desafio de treino no GymRats e eu nunca fui tão constante na academia quanto naqueles 60 dias, porque ninguém queria ficar no fim do ranking. Com água sempre foi diferente: eu sabia que precisava beber mais, mas não tinha nada me puxando. As salas de desafio do app trazem exatamente essa pressão saudável. Ter que mandar a foto do check-in e ver os colegas incentivando no mural faz eu lembrar da garrafa ao longo do dia, e não só quando já estou com sede.</p></div>
+        <div class="card"><h4>Vitor</h4><p>Minha rotina é corrida: trabalho durante o dia e venho direto para a faculdade à noite, muitas vezes sem tempo nem de jantar direito. Nesse ritmo, beber água acaba ficando para depois, e o “depois” nunca chega. O que mais me ajuda no Drink To You é o histórico: consigo olhar a semana e perceber em quais dias eu deixei de lado, normalmente os mais puxados. Os lembretes dentro do horário que eu escolho não me atrapalham nas aulas, e as conquistas me dão um motivo a mais para abrir o app todo dia, mesmo nos dias mais cansativos.</p></div>
+      </div>
+      <div class="callout warn">
+        A meta diária é uma preferência pessoal e <strong>não constitui recomendação médica</strong>. O clima exibido é apenas informativo e não altera a meta.
+      </div>
+    </section>
+
+    <!-- 3. FUNCIONALIDADES -->
+    <section id="funcionalidades">
+      <h2><span class="num">3</span>Funcionalidades</h2>
+      <p class="subtitle">O que o usuário consegue fazer.</p>
+      <div class="grid g3">
+        <div class="card"><span class="icon">🔐</span><h4>Conta e login</h4><p>Cadastro e login com JWT; sessão restaurada automaticamente; onboarding na primeira entrada.</p></div>
+        <div class="card"><span class="icon">🥤</span><h4>Registro rápido</h4><p>Atalhos ilustrados de 150 ml (Copo P), 250 ml (Copo M), 500 ml (Garrafa) ou valor personalizado, com botão <strong>Desfazer</strong>.</p></div>
+        <div class="card"><span class="icon">🎯</span><h4>Meta e progresso</h4><p>Anel animado de progresso que vira verde-esmeralda com o selo “Meta batida!” ao chegar em 100%.</p></div>
+        <div class="card"><span class="icon">🔥</span><h4>Sequência (streak)</h4><p>Conta quantos dias seguidos a meta foi cumprida, exibida no cabeçalho da tela inicial.</p></div>
+        <div class="card"><span class="icon">📊</span><h4>Histórico e semana</h4><p>Gráfico dos últimos 7 dias, média, histórico agrupado por dia e tela de detalhes para editar/excluir.</p></div>
+        <div class="card"><span class="icon">⏰</span><h4>Lembretes</h4><p>Notificações locais por intervalo (mín. 15 min) dentro de uma janela de horário, com botão “Testar notificação agora”.</p></div>
+        <div class="card"><span class="icon">🏆</span><h4>Salas de desafio</h4><p>Competição entre colegas por código de convite, com ranking, check-in com foto e chama coletiva.</p></div>
+        <div class="card"><span class="icon">🎖️</span><h4>Conquistas e níveis</h4><p>15 medalhas em 4 raridades e 6 níveis de XP, com barra de progresso individual.</p></div>
+        <div class="card"><span class="icon">🌤️</span><h4>Clima e tema</h4><p>Clima da cidade via Open-Meteo (com localização) e modo claro/escuro persistido.</p></div>
+      </div>
+    </section>
+
+    <!-- 4. DESAFIOS -->
+    <section id="desafios">
+      <h2><span class="num">4</span>Salas de desafio (GymRats + Duolingo)</h2>
+      <p class="subtitle">O principal diferencial para engajamento social.</p>
+
+      <h3>Como funciona</h3>
+      <div class="flow">
+        <div class="step"><b>1. Criar sala</b>Nome, meta diária (500–10.000 ml), início, fim, prêmio opcional</div>
+        <div class="sep">→</div>
+        <div class="step"><b>2. Convidar</b>Código gerado automaticamente (ex.: <code>AGUA-DEMO</code>)</div>
+        <div class="sep">→</div>
+        <div class="step"><b>3. Beber água</b>Registros normais ao longo do dia</div>
+        <div class="sep">→</div>
+        <div class="step"><b>4. Check-in</b>Foto de comprovação = +1 ponto no dia</div>
+        <div class="sep">→</div>
+        <div class="step"><b>5. Ranking</b>Pontos, chama coletiva e mural de incentivo</div>
+      </div>
+
+      <h3>Regras implementadas no backend</h3>
+      <div class="grid g2">
+        <div class="card">
+          <h4>🛡️ Trava anti-burla do check-in</h4>
+          <p>O check-in só é aceito se, <strong>no mesmo dia</strong>, o usuário:</p>
+          <ul class="check" style="margin:8px 0 0">
+            <li>atingiu a meta diária definida pela sala;</li>
+            <li>fez <strong>pelo menos 2 registros separados</strong> (impede lançar tudo de uma vez só para pontuar);</li>
+            <li>enviou uma <strong>foto</strong> pela câmera ou galeria;</li>
+            <li>ainda não fez check-in naquela sala hoje (1 ponto por dia, garantido por restrição <code>UNIQUE</code> no banco).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>📅 Ciclo de vida da sala</h4>
+          <ul class="check" style="margin:8px 0 0">
+            <li>Status calculado por data: aguardando início, em andamento ou encerrada.</li>
+            <li><strong>Trava opcional</strong> que fecha a entrada de novos membros após o início.</li>
+            <li>Não é possível entrar em salas já encerradas.</li>
+            <li>Qualquer participante pode <strong>sair</strong> quando quiser.</li>
+            <li>Só membros podem ver detalhes, ranking e fotos da sala.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>🔥 Chama coletiva (estilo Duolingo)</h4>
+          <p>Aumenta 1 a cada dia consecutivo em que <strong>todos</strong> os membros da sala fizeram check-in. Se alguém falhar, a chama do grupo zera — gerando responsabilidade mútua.</p>
+        </div>
+        <div class="card">
+          <h4>💬 Mural e premiação</h4>
+          <p>Feed com as fotos dos check-ins e reação “💧 Incentivar”. A premiação é <strong>opcional e combinada entre os participantes</strong>; o sistema apenas exibe o texto e deixa claro que não intermedia prêmios.</p>
+        </div>
+      </div>
+      <div class="slide-hint">Mostre o fluxo de 5 passos e destaque a trava anti-burla — é a pergunta mais provável da banca (“e se a pessoa mentir?”).</div>
+    </section>
+
+    <!-- 5. CONQUISTAS -->
+    <section id="conquistas">
+      <h2><span class="num">5</span>Conquistas pessoais e níveis</h2>
+      <p class="subtitle">Retenção de longo prazo: metas curtas para começar e metas extremas para quem é fiel ao app.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Raridade</th><th>Conquista</th><th>Como desbloquear</th><th>XP</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag t-bronze">Bronze · Iniciante</span></td><td>Primeiro Gole</td><td>Fazer o primeiro registro de água</td><td>50</td></tr>
+            <tr><td><span class="tag t-bronze">Bronze · Iniciante</span></td><td>Ritmo Hidratado</td><td>5 registros separados em um mesmo dia</td><td>80</td></tr>
+            <tr><td><span class="tag t-bronze">Bronze · Iniciante</span></td><td>Meta Batida!</td><td>Atingir 100% da meta pela primeira vez</td><td>100</td></tr>
+            <tr><td><span class="tag t-bronze">Bronze · Iniciante</span></td><td>Madrugador Saudável</td><td>Beber água entre 05h e 09h em 3 dias diferentes</td><td>100</td></tr>
+            <tr><td><span class="tag t-silver">Prata · Consistente</span></td><td>Chama Acesa</td><td>Meta cumprida por 3 dias seguidos</td><td>150</td></tr>
+            <tr><td><span class="tag t-silver">Prata · Consistente</span></td><td>Espírito de Equipe</td><td>Criar ou entrar na primeira sala de desafio</td><td>150</td></tr>
+            <tr><td><span class="tag t-silver">Prata · Consistente</span></td><td>Galão de 20 Litros</td><td>Acumular 20 L registrados</td><td>200</td></tr>
+            <tr><td><span class="tag t-silver">Prata · Consistente</span></td><td>Semana Perfeita</td><td>Meta cumprida por 7 dias seguidos</td><td>250</td></tr>
+            <tr><td><span class="tag t-gold">Ouro · Veterano</span></td><td>Check-in Comprovado</td><td>5 check-ins com foto em desafios</td><td>300</td></tr>
+            <tr><td><span class="tag t-gold">Ouro · Veterano</span></td><td>Quinzena Imbatível</td><td>Meta cumprida por 15 dias seguidos</td><td>400</td></tr>
+            <tr><td><span class="tag t-gold">Ouro · Veterano</span></td><td>60 Litros de Pura Vida</td><td>Acumular 60 L registrados</td><td>450</td></tr>
+            <tr><td><span class="tag t-gold">Ouro · Veterano</span></td><td>Atleta da Hidratação</td><td>20 check-ins com foto em desafios</td><td>500</td></tr>
+            <tr><td><span class="tag t-diamond">Diamante · Lendária</span></td><td><strong>Mestre da Consistência</strong></td><td><strong>45 dias seguidos</strong> cumprindo a meta, sem falhar</td><td>1000</td></tr>
+            <tr><td><span class="tag t-diamond">Diamante · Lendária</span></td><td><strong>Oceano Particular</strong></td><td>Acumular <strong>200 litros</strong> registrados no app</td><td>1000</td></tr>
+            <tr><td><span class="tag t-diamond">Diamante · Lendária</span></td><td><strong>Lenda do Desafio</strong></td><td><strong>60 check-ins</strong> com foto em salas de desafio</td><td>1200</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Níveis e cálculo de XP</h3>
+      <div class="grid g2">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nível</th><th>Título</th><th>XP mínimo</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Gota Iniciante</td><td>0</td></tr>
+              <tr><td>2</td><td>Aprendiz das Águas</td><td>250</td></tr>
+              <tr><td>3</td><td>Hidratado Fiel</td><td>600</td></tr>
+              <tr><td>4</td><td>Guardião da Fonte</td><td>1.200</td></tr>
+              <tr><td>5</td><td>Mestre da Consistência</td><td>2.200</td></tr>
+              <tr><td>6</td><td>Lenda Oceânica</td><td>3.800</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h4>Fórmula do XP total</h4>
+          <p style="margin-bottom:10px">O XP é recalculado no servidor a partir dos dados reais — não é um contador que o app possa manipular.</p>
+          <pre><code>XP = soma do XP das conquistas desbloqueadas
+   + 5 XP a cada 250 ml registrados
+   + 15 XP por dia em que a meta foi batida</code></pre>
+          <p>Todas as estatísticas (sequência, manhãs, litros) respeitam o <strong>fuso horário do aparelho</strong>.</p>
+        </div>
+      </div>
+      <div class="slide-hint">Mostre a distribuição de dificuldade (4 bronze → 3 lendárias) como uma “escada” e explique a estratégia de retenção.</div>
+    </section>
+
+    <!-- 6. ARQUITETURA -->
+    <section id="arquitetura">
+      <h2><span class="num">6</span>Arquitetura</h2>
+      <p class="subtitle">Uma base de código para o app, uma API própria e um banco relacional na nuvem.</p>
+      <div class="arch">
+        <div class="layer l1">App Drink To You<small>APK Android nativo · PWA instalável no iPhone · Navegador web</small></div>
+        <div class="arrow">HTTPS + JSON · Authorization: Bearer &lt;JWT&gt;</div>
+        <div class="layer l2">API REST Node.js + Express (Render)<small>Também hospeda os arquivos estáticos do PWA na mesma URL</small></div>
+        <div class="arrow">Pool de conexões TCP/SSL (pg)</div>
+        <div class="layer l3">PostgreSQL (Supabase)<small>Session Pooler · 7 tabelas · schema criado automaticamente</small></div>
+      </div>
+      <p class="side-ext">O app consome também, diretamente, a API pública <strong>Open-Meteo</strong> para o clima.</p>
+
+      <h3>Camadas do backend (padrão visto em aula)</h3>
+      <div class="flow">
+        <div class="step"><b>Routes</b>Endpoints + validação com <code>express-validator</code></div>
+        <div class="sep">→</div>
+        <div class="step"><b>Middlewares</b><code>authenticate</code>, <code>validate</code>, <code>errorHandler</code></div>
+        <div class="sep">→</div>
+        <div class="step"><b>Controllers</b>Camada HTTP: recebe e devolve status</div>
+        <div class="sep">→</div>
+        <div class="step"><b>Services</b>Regras de negócio, anti-burla, conquistas</div>
+        <div class="sep">→</div>
+        <div class="step"><b>Database</b>Pool <code>pg</code> + <code>schema.sql</code></div>
+      </div>
+
+      <h3>Organização do app</h3>
+      <div class="grid g3">
+        <div class="card"><h4>Navegação</h4><p>Native Stack (login, onboarding, detalhes) + Bottom Tabs com 5 abas: Início, Desafios, Conquistas, Histórico e Ajustes.</p></div>
+        <div class="card"><h4>Estado global</h4><p><code>AuthContext</code> (usuário, token, sessão) e <code>ThemeContext</code> (tema claro/escuro).</p></div>
+        <div class="card"><h4>Serviços e hooks</h4><p>Camada <code>services/</code> isola chamadas HTTP; hooks como <code>useWaterSummary</code> e <code>useFetch</code> isolam estado e carregamento.</p></div>
+      </div>
+    </section>
+
+    <!-- 7. TECNOLOGIAS -->
+    <section id="tecnologias">
+      <h2><span class="num">7</span>Tecnologias</h2>
+      <p class="subtitle">Stack escolhida e o motivo de cada peça.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Camada</th><th>Tecnologia</th><th>Por quê</th></tr></thead>
+          <tbody>
+            <tr><td>App</td><td>React Native 0.88 · Expo SDK 58 · TypeScript 6</td><td>Um único código para Android, iOS e Web; tipagem evita erros em tempo de desenvolvimento.</td></tr>
+            <tr><td>Web/PWA</td><td>React Native Web · React DOM</td><td>Exporta o mesmo app como site instalável para iPhone sem App Store.</td></tr>
+            <tr><td>Navegação</td><td>React Navigation 7 (Native Stack + Bottom Tabs)</td><td>Requisito da disciplina; telas com parâmetros (<code>entryId</code>, <code>challengeId</code>).</td></tr>
+            <tr><td>Interface</td><td>React Native Paper · expo-linear-gradient · react-native-svg</td><td>Componentes Material prontos, cabeçalhos em gradiente e anel de progresso em SVG.</td></tr>
+            <tr><td>Persistência local</td><td>AsyncStorage</td><td>Guarda token, tema, preferências e flag de onboarding (nunca a senha).</td></tr>
+            <tr><td>Recursos nativos</td><td>expo-image-picker · expo-notifications · expo-haptics · expo-location</td><td>Câmera/galeria, lembretes, vibração e localização.</td></tr>
+            <tr><td>Backend</td><td>Node.js · Express 5 · express-validator · helmet · cors</td><td>API REST leve, com validação de entrada e cabeçalhos de segurança.</td></tr>
+            <tr><td>Segurança</td><td>bcryptjs · jsonwebtoken</td><td>Hash de senha e autenticação sem estado via JWT.</td></tr>
+            <tr><td>Banco</td><td>PostgreSQL (Supabase) · driver <code>pg</code></td><td>Relacional, gratuito e gerenciado; agrupamento por dia com fuso horário direto no SQL.</td></tr>
+            <tr><td>API externa</td><td>Open-Meteo</td><td>Clima gratuito e sem chave de API.</td></tr>
+            <tr><td>Hospedagem</td><td>Render (API + PWA) · EAS Build (APK)</td><td>Deploy automático a cada push na <code>main</code>; APK gerado na nuvem.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8. ESTRUTURA -->
+    <section id="estrutura">
+      <h2><span class="num">8</span>Estrutura do código</h2>
+      <p class="subtitle">Monorepositório com app e API separados.</p>
+<pre><code>drink-to-you/
+├── app/                        # App React Native + Web/PWA (Expo)
+│   ├── App.tsx                 # Providers (tema, auth, Paper) + carregamento das fontes de ícones
+│   ├── app.json · eas.json     # Configuração Expo, permissões e perfis de build
+│   ├── public/                 # manifest.json, ícone e fonte do PWA
+│   └── src/
+│       ├── screens/            # auth, home, challenges, achievements, history, details, settings
+│       ├── components/         # common, dashboard (ProgressRing, WeeklyChart...), water
+│       ├── hooks/              # useAuth, useAppTheme, useFetch, useWeather, useWaterSummary, useSlowHint
+│       ├── services/           # api, auth, water, challenge, achievement, photo, notification, weather...
+│       ├── context/            # AuthContext, ThemeContext
+│       ├── navigation/         # RootNavigator (Stack) + MainTabs (5 abas)
+│       ├── theme/ · types/ · utils/
+├── api/                        # API Node.js + Express
+│   ├── public/                 # Bundle Web/PWA exportado (servido pelo Express)
+│   ├── scripts/seedDemo.js     # Usuário demo + 14 dias de histórico + sala AGUA-DEMO
+│   └── src/
+│       ├── routes/             # auth, waterEntry, preferences, challenge, achievement
+│       ├── controllers/
+│       ├── services/           # regras de negócio (summary, challenge, achievement...)
+│       ├── middlewares/        # authenticate, validate, errorHandler
+│       ├── database/           # pool.js, initDatabase.js, schema.sql
+│       └── config/ · utils/    # env, httpError, asyncHandler, timezone
+├── README.md · ARCHITECTURE.md · DATABASE.md · API_CONTRACT.md · DEVELOPMENT_STATUS.md
+└── render.yaml                 # Deploy no Render</code></pre>
+    </section>
+
+    <!-- 9. BANCO -->
+    <section id="banco">
+      <h2><span class="num">9</span>Banco de dados</h2>
+      <p class="subtitle">7 tabelas no PostgreSQL, criadas automaticamente na inicialização da API.</p>
+      <div class="grid g2">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tabela</th><th>Função</th></tr></thead>
+            <tbody>
+              <tr><td><code>users</code></td><td>Nome, e-mail único e hash da senha</td></tr>
+              <tr><td><code>water_entries</code></td><td>Cada registro de consumo (ml, data/hora, observação)</td></tr>
+              <tr><td><code>user_preferences</code></td><td>Meta diária e configuração de lembretes (1:1 com usuário)</td></tr>
+              <tr><td><code>challenges</code></td><td>Salas: código, meta, datas, trava, prêmio, criador</td></tr>
+              <tr><td><code>challenge_members</code></td><td>Participantes de cada sala (N:N usuários × salas)</td></tr>
+              <tr><td><code>challenge_checkins</code></td><td>Check-ins diários com foto (único por sala/usuário/dia)</td></tr>
+              <tr><td><code>challenge_reactions</code></td><td>Reações “💧 Incentivar” (chave composta check-in + usuário)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h4>Relacionamentos</h4>
+          <ul class="check" style="margin:8px 0 12px">
+            <li><code>users</code> 1 — N <code>water_entries</code></li>
+            <li><code>users</code> 1 — 1 <code>user_preferences</code></li>
+            <li><code>users</code> 1 — N <code>challenges</code> (criador)</li>
+            <li><code>challenges</code> N — N <code>users</code> via <code>challenge_members</code></li>
+            <li><code>challenges</code> 1 — N <code>challenge_checkins</code></li>
+            <li><code>challenge_checkins</code> 1 — N <code>challenge_reactions</code></li>
+          </ul>
+          <h4>Decisões importantes</h4>
+          <p>Datas gravadas em UTC (<code>TIMESTAMPTZ</code>) e agrupadas pelo <strong>dia local do usuário</strong> (o app envia <code>?tz=America/Sao_Paulo</code>). Exclusão em cascata (<code>ON DELETE CASCADE</code>) e índices em <code>(user_id, created_at)</code>.</p>
+        </div>
+      </div>
+      <div class="slide-hint">Inclua o DER (está em Mermaid no README.md e no DATABASE.md do repositório).</div>
+    </section>
+
+    <!-- 10. API -->
+    <section id="api">
+      <h2><span class="num">10</span>API REST</h2>
+      <p class="subtitle">Base: <code>https://drink-to-you-api.onrender.com/api</code> · 🔒 = exige token JWT</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Método</th><th>Endpoint</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/auth/register</code></td><td>Cria conta e retorna token</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/auth/login</code></td><td>Autentica e retorna token</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/auth/me</code> 🔒</td><td>Dados do usuário logado</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/water-entries</code> 🔒</td><td>Lista registros (paginação)</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/water-entries</code> 🔒</td><td>Cria registro (1–5000 ml)</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/water-entries/:id</code> 🔒</td><td>Detalha registro</td></tr>
+            <tr><td><span class="tag t-put">PUT</span></td><td><code>/water-entries/:id</code> 🔒</td><td>Edita registro</td></tr>
+            <tr><td><span class="tag t-del">DELETE</span></td><td><code>/water-entries/:id</code> 🔒</td><td>Exclui registro</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/water-entries/summary/today</code> 🔒</td><td>Resumo do dia (meta, consumo, sequência)</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/water-entries/summary/weekly</code> 🔒</td><td>Últimos 7 dias e média</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/preferences</code> 🔒</td><td>Consulta preferências</td></tr>
+            <tr><td><span class="tag t-put">PUT</span></td><td><code>/preferences</code> 🔒</td><td>Atualiza meta e lembretes</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/challenges</code> 🔒</td><td>Salas do usuário</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/challenges</code> 🔒</td><td>Cria sala e gera código de convite</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/challenges/join</code> 🔒</td><td>Entra em sala pelo código</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/challenges/:id</code> 🔒</td><td>Ranking, chama coletiva, elegibilidade e mural</td></tr>
+            <tr><td><span class="tag t-del">DELETE</span></td><td><code>/challenges/:id/leave</code> 🔒</td><td>Sai da sala</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/challenges/:id/checkins</code> 🔒</td><td>Check-in com foto (regras anti-burla)</td></tr>
+            <tr><td><span class="tag t-post">POST</span></td><td><code>/challenges/:id/checkins/:checkinId/react</code> 🔒</td><td>Alterna reação “Incentivar”</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/achievements</code> 🔒</td><td>Nível, XP, estatísticas e 15 conquistas</td></tr>
+            <tr><td><span class="tag t-get">GET</span></td><td><code>/health</code> (fora de <code>/api</code>)</td><td>Verificação de saúde usada pelo Render</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:14px">Erros sempre no formato <code>{ "message": "..." }</code> com status coerente (400 validação/anti-burla, 401 token, 403 não membro da sala, 404 não encontrado, 409 duplicidade).</p>
+    </section>
+
+    <!-- 11. REQUISITOS -->
+    <section id="requisitos">
+      <h2><span class="num">11</span>Requisitos da disciplina × implementação</h2>
+      <p class="subtitle">Onde cada exigência do professor está no código.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Requisito</th><th>Onde está</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Navegação Stack + Tab com parâmetros</td><td><code>navigation/</code> — <code>EntryDetails { entryId }</code> e <code>ChallengeDetails { challengeId }</code></td></tr>
+            <tr><td>2</td><td>Login na API Node, token salvo e enviado no header</td><td><code>authRoutes.js</code>, <code>services/api.ts</code> (<code>Authorization: Bearer</code>), <code>storage.ts</code></td></tr>
+            <tr><td>3</td><td>Context API</td><td><code>AuthContext.tsx</code>, <code>ThemeContext.tsx</code></td></tr>
+            <tr><td>4</td><td>API externa com loading e erro</td><td><code>weatherService.ts</code> + <code>WeatherCard.tsx</code> (Open-Meteo)</td></tr>
+            <tr><td>5</td><td>FlatList/SectionList com <code>keyExtractor</code> + detalhe</td><td><code>HistoryScreen.tsx</code> (SectionList) → <code>EntryDetailsScreen.tsx</code></td></tr>
+            <tr><td>6</td><td>Formulário controlado (TextInput, Switch, Button)</td><td><code>SettingsScreen</code>, <code>LoginScreen</code>, <code>RegisterScreen</code>, criação de sala</td></tr>
+            <tr><td>7</td><td>AsyncStorage</td><td><code>services/storage.ts</code></td></tr>
+            <tr><td>8</td><td>Hook customizado</td><td><code>useAuth</code>, <code>useFetch</code>, <code>useWeather</code>, <code>useWaterSummary</code>, <code>useSlowHint</code>, <code>useAppTheme</code></td></tr>
+            <tr><td>9</td><td>React Native Paper + StyleSheet + layout responsivo</td><td>Todas as telas</td></tr>
+            <tr><td>10</td><td>Pastas screens, components, hooks, services, context</td><td><code>app/src/</code></td></tr>
+            <tr><td>—</td><td>Recurso do dispositivo</td><td>Câmera/galeria, notificações, vibração e localização</td></tr>
+            <tr><td>—</td><td>API com CRUD</td><td><code>waterEntryRoutes.js</code> (CRUD completo) + rotas de desafios</td></tr>
+            <tr><td>—</td><td>Git com branches e <code>.gitignore</code></td><td>9 branches de funcionalidade integradas na <code>main</code> com merge <code>--no-ff</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 12. DISPOSITIVO -->
+    <section id="dispositivo">
+      <h2><span class="num">12</span>Recursos do dispositivo</h2>
+      <p class="subtitle">Quatro recursos nativos, cada um com propósito claro no app.</p>
+      <div class="grid g4">
+        <div class="card"><span class="icon">📷</span><h4>Câmera e galeria</h4><p><code>expo-image-picker</code> para a foto do check-in. No PWA, usa input de arquivo/câmera do navegador e comprime a imagem com <code>&lt;canvas&gt;</code>.</p></div>
+        <div class="card"><span class="icon">🔔</span><h4>Notificações</h4><p><code>expo-notifications</code> agenda lembretes diários locais no Android; no PWA usa a Web Notification API.</p></div>
+        <div class="card"><span class="icon">📳</span><h4>Vibração</h4><p><code>expo-haptics</code> dá retorno tátil ao registrar água, salvar, reagir e concluir metas.</p></div>
+        <div class="card"><span class="icon">📍</span><h4>Localização</h4><p><code>expo-location</code> obtém a cidade para o clima; se negada, usa São Paulo como padrão.</p></div>
+      </div>
+      <p style="margin-top:14px">Todas as permissões têm textos em português explicando o motivo do uso (configurados em <code>app.json</code>).</p>
+    </section>
+
+    <!-- 13. UX -->
+    <section id="ux">
+      <h2><span class="num">13</span>Melhorias de UX/UI</h2>
+      <p class="subtitle">Ajustes feitos a partir do uso real do app.</p>
+      <div class="grid g3">
+        <div class="card"><h4>⌨️ Teclado não cobre mais os campos</h4><p><code>KeyboardAvoidingView</code> + rolagem nos formulários e modo <code>pan</code> no Android. Problema relatado no teste real de login.</p></div>
+        <div class="card"><h4>🥤 Atalhos com recipientes</h4><p>Botões com ícones e rótulos distintos (Copo P, Copo M, Garrafa, Outro) e animação de “quique”.</p></div>
+        <div class="card"><h4>🎉 Estado de celebração</h4><p>Anel muda para verde-esmeralda e exibe “Meta batida!” ao atingir 100%.</p></div>
+        <div class="card"><h4>↩️ Desfazer</h4><p>Ação “Desfazer” na barra de confirmação, para corrigir toques acidentais sem abrir o histórico.</p></div>
+        <div class="card"><h4>🌈 Cabeçalhos em gradiente</h4><p>Identidade visual azul profundo + ciano, com suporte a modo escuro.</p></div>
+        <div class="card"><h4>🧭 5 abas</h4><p>Início, Desafios, Conquistas, Histórico e Ajustes — gamificação sempre a um toque.</p></div>
+      </div>
+    </section>
+
+    <!-- 14. DISTRIBUIÇÃO -->
+    <section id="distribuicao">
+      <h2><span class="num">14</span>Distribuição: Android e iPhone sem lojas pagas</h2>
+      <p class="subtitle">Objetivo: qualquer usuário usar o app sem Expo Go, sem QR Code e sem pagar licença da Apple.</p>
+      <div class="grid g2">
+        <div class="card">
+          <span class="icon">🤖</span>
+          <h4>Android — APK nativo</h4>
+          <p>Gerado na nuvem com <strong>EAS Build</strong> (perfil <code>preview</code>). O usuário baixa o arquivo <code>.apk</code> e instala diretamente. Tem acesso completo a notificações agendadas, câmera, vibração e localização.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🍎</span>
+          <h4>iPhone e Web — PWA</h4>
+          <p>O mesmo código é exportado para Web e servido pelo Express no Render. No Safari: <strong>Compartilhar → Adicionar à Tela de Início</strong>. O app abre em tela cheia, com ícone próprio, sem App Store.</p>
+        </div>
+      </div>
+      <div class="callout info">
+        <strong>Por que não Expo Go?</strong> Ele exige QR Code, versão de SDK compatível e, no nosso teste, falhou ao baixar a atualização remota
+        (<code>Failed to download remote update</code>). APK + PWA eliminam essa dependência para o usuário final.
+      </div>
+      <div class="callout warn">
+        <strong>Limitação honesta do PWA:</strong> no navegador/iPhone, os lembretes periódicos só disparam enquanto o app está aberto
+        (não há servidor de push). No APK Android, os lembretes são agendados no sistema e funcionam com o app fechado.
+      </div>
+    </section>
+
+    <!-- 15. SEGURANÇA -->
+    <section id="seguranca">
+      <h2><span class="num">15</span>Segurança e boas práticas</h2>
+      <ul class="check">
+        <li>Senhas armazenadas apenas como hash <strong>bcrypt</strong>; nunca salvas no dispositivo.</li>
+        <li>Rotas privadas protegidas por <strong>JWT</strong>; toda consulta é filtrada pelo usuário autenticado ou por participação verificada na sala.</li>
+        <li>Validação de todas as entradas com <code>express-validator</code> (tamanhos, faixas de valores, formato de datas).</li>
+        <li>Cabeçalhos de segurança com <code>helmet</code>; tratamento centralizado de erros, sem vazar detalhes internos.</li>
+        <li>Segredos apenas em <code>.env</code> (ignorado pelo Git); repositório traz somente <code>.env.example</code>.</li>
+        <li><code>.gitignore</code> bloqueia <code>node_modules</code>, chaves, builds nativos e bancos locais.</li>
+        <li>Erros de rede e token expirado tratados no app (logout automático em 401, aviso quando o servidor está “acordando”).</li>
+        <li>Código limpo: camadas separadas, nomes descritivos, constantes nomeadas e funções pequenas.</li>
+      </ul>
+    </section>
+
+    <!-- 16. GIT -->
+    <section id="git">
+      <h2><span class="num">16</span>Processo de desenvolvimento e Git</h2>
+      <p class="subtitle">Cada funcionalidade em sua branch, integrada na <code>main</code> com merge explícito.</p>
+      <div class="timeline">
+        <div class="item"><h4>Base do repositório</h4><p><code>chore: adiciona .gitignore</code> · <code>docs: adiciona README e status inicial</code></p></div>
+        <div class="item"><h4>feature/api-setup</h4><p>API com autenticação, CRUD de consumo e preferências.</p></div>
+        <div class="item"><h4>feature/mobile-setup</h4><p>App Expo com navegação, telas, tema e integração com a API.</p></div>
+        <div class="item"><h4>feature/deploy-config</h4><p>Seed de usuário demo e configuração do Render/EAS.</p></div>
+        <div class="item"><h4>feature/eas-distribution</h4><p>Ícone, splash e perfis de distribuição.</p></div>
+        <div class="item"><h4>docs/project-documentation</h4><p>Documentação acadêmica, DER, arquitetura e contrato da API.</p></div>
+        <div class="item"><h4>fix/expo-go-runtime</h4><p>Ajuste de <code>runtimeVersion</code> para compatibilidade.</p></div>
+        <div class="item"><h4>feat/ios-pwa-and-keyboard-fix</h4><p>Versão PWA para iPhone/Web e correção do teclado sobre os campos.</p></div>
+        <div class="item"><h4>feat/challenges-achievements-ux</h4><p>Salas de desafio com anti-burla, 15 conquistas, melhorias de UX e correção dos ícones do PWA.</p></div>
+      </div>
+      <p>Repositório: <a href="https://github.com/Cyberr01/drink-to-you" target="_blank" rel="noopener">github.com/Cyberr01/drink-to-you</a> · Commits semânticos em português (<code>feat</code>, <code>fix</code>, <code>docs</code>, <code>chore</code>).</p>
+    </section>
+
+    <!-- 17. PROBLEMAS -->
+    <section id="problemas">
+      <h2><span class="num">17</span>Problemas encontrados e como resolvemos</h2>
+      <p class="subtitle">Bons exemplos para mostrar raciocínio técnico na apresentação.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problema</th><th>Causa</th><th>Solução</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>API não conectava ao banco</td>
+              <td>Caractere especial (<code>#</code>) na senha quebrava a URL de conexão</td>
+              <td>Senha alfanumérica e uso do <em>Session Pooler</em> do Supabase</td>
+            </tr>
+            <tr>
+              <td>Expo Go: <code>Failed to download remote update</code></td>
+              <td>Incompatibilidade entre o Expo Go e o pacote de atualização remota</td>
+              <td>Distribuição por APK (EAS Build) e PWA, sem depender do Expo Go</td>
+            </tr>
+            <tr>
+              <td>iPhone sem App Store</td>
+              <td>Publicar exige licença paga da Apple</td>
+              <td>PWA instalável servido pelo próprio servidor da API</td>
+            </tr>
+            <tr>
+              <td>Teclado cobria os campos de e-mail/senha</td>
+              <td>Formulários sem ajuste de layout para o teclado</td>
+              <td><code>KeyboardAvoidingView</code>, rolagem e modo <code>pan</code> no Android</td>
+            </tr>
+            <tr>
+              <td>Ícones quebrados no PWA</td>
+              <td>A regra <code>node_modules/</code> do <code>.gitignore</code> também ignorava as fontes exportadas em <code>api/public/assets/node_modules/...</code>; o servidor devolvia HTML no lugar da fonte</td>
+              <td><code>.gitignore</code> específico, fonte pré-carregada, <code>@font-face</code> de reserva, mapeamento de ícones no Paper e 404 real para arquivos ausentes</td>
+            </tr>
+            <tr>
+              <td>Consumo contado no dia errado</td>
+              <td>Servidor em UTC × usuário em UTC−3</td>
+              <td>App envia o fuso; SQL agrupa com <code>AT TIME ZONE</code></td>
+            </tr>
+            <tr>
+              <td>Usuário poderia “burlar” o desafio</td>
+              <td>Lançar a meta inteira de uma vez só</td>
+              <td>Exigir meta batida + ≥ 2 registros separados + foto, e 1 check-in por dia</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 18. TESTES -->
+    <section id="testes">
+      <h2><span class="num">18</span>Testes e validação</h2>
+      <div class="grid g3">
+        <div class="stat"><div class="value">24/24</div><div class="label">testes da API base (auth, CRUD, resumos, validações, isolamento entre usuários)</div></div>
+        <div class="stat"><div class="value">11/11</div><div class="label">testes de ponta a ponta de desafios e conquistas no banco real</div></div>
+        <div class="stat"><div class="value">20/20</div><div class="label">verificações do <code>expo-doctor</code> + TypeScript sem erros</div></div>
+      </div>
+      <h3>O que os testes de desafios cobrem</h3>
+      <ul class="check">
+        <li>Retorno das 15 conquistas; criação de sala; entrada por código.</li>
+        <li>Check-in <strong>bloqueado</strong> abaixo da meta e <strong>bloqueado</strong> com registro único.</li>
+        <li>Check-in válido, ranking e incremento da chama coletiva quando todos fazem check-in.</li>
+        <li>Reação no mural e saída da sala.</li>
+      </ul>
+      <h3>Validação em produção</h3>
+      <p>Após o deploy, conferimos no Render: <code>/health</code>, página do PWA, <code>manifest.json</code> e fonte de ícones respondendo HTTP 200 com o tipo correto, além de <code>/api/achievements</code> e <code>/api/challenges</code> com o usuário demo.</p>
+    </section>
+
+    <!-- 19. LIMITAÇÕES -->
+    <section id="limitacoes">
+      <h2><span class="num">19</span>Limitações e próximos passos</h2>
+      <div class="grid g2">
+        <div class="card">
+          <h4>Limitações conhecidas</h4>
+          <ul style="margin:6px 0 0; padding-left:20px; color:#475569; font-size:.94rem">
+            <li>A foto <strong>desestimula</strong> a fraude, mas não prova consumo real.</li>
+            <li>Lembretes no PWA só funcionam com o app aberto.</li>
+            <li>Plano gratuito do Render “dorme”: o primeiro acesso pode levar até ~1 minuto.</li>
+            <li>Fotos guardadas como texto no banco (simples, mas não ideal para grande escala).</li>
+            <li>Sem modo offline.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Evoluções possíveis</h4>
+          <ul style="margin:6px 0 0; padding-left:20px; color:#475569; font-size:.94rem">
+            <li>Push notifications pelo servidor (lembretes no PWA e aviso “seu colega fez check-in”).</li>
+            <li>Armazenamento de fotos em serviço de arquivos (ex.: Supabase Storage).</li>
+            <li>Registro offline com sincronização posterior.</li>
+            <li>Integração com garrafas inteligentes ou wearables.</li>
+            <li>Testes automatizados no app e pipeline de CI.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20. DEMO -->
+    <section id="demo">
+      <h2><span class="num">20</span>Demonstração</h2>
+      <div class="grid g2">
+        <div class="card">
+          <h4>Acesso</h4>
+          <p><strong>PWA (iPhone/Web):</strong> <a href="https://drink-to-you-api.onrender.com" target="_blank" rel="noopener">drink-to-you-api.onrender.com</a></p>
+          <p><strong>Android:</strong> <a href="https://expo.dev/artifacts/eas/f91P8XtVcQO9l4pkPQblzioFyG-YM7xorFamRt_lidc.apk" target="_blank" rel="noopener">baixar APK (EAS Build)</a></p>
+          <p style="margin-top:8px"><strong>Login demo:</strong> <code>demo@drinktoyou.com</code> / <code>demo1234</code></p>
+          <p><strong>Sala demo:</strong> <code>AGUA-DEMO</code> — “Desafio 30 Dias · Equipe Tech”</p>
+        </div>
+        <div class="card">
+          <h4>Roteiro da demo ao vivo (~3 min)</h4>
+          <ol style="margin:6px 0 0; padding-left:20px; color:#475569; font-size:.94rem">
+            <li>Abrir o app (acesse antes para “acordar” o servidor).</li>
+            <li>Login com a conta demo.</li>
+            <li>Registrar 250 ml e mostrar o anel + botão Desfazer.</li>
+            <li>Aba Desafios → sala <code>AGUA-DEMO</code>: ranking, chama e mural.</li>
+            <li>Mostrar a trava anti-burla na tentativa de check-in.</li>
+            <li>Aba Conquistas: nível, XP e medalhas lendárias bloqueadas.</li>
+            <li>Ajustes: tema escuro e “Testar notificação agora”.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="callout warn">Abra o link alguns minutos antes da apresentação: o plano gratuito do Render pode levar até 1 minuto para responder ao primeiro acesso.</div>
+    </section>
+
+    <!-- 21. ROTEIRO -->
+    <section id="roteiro" class="slides-plan">
+      <h2><span class="num">21</span>Roteiro sugerido de slides</h2>
+      <p class="subtitle">Base para gerar a apresentação (cerca de 14 slides, de 10 a 15 minutos).</p>
+      <div class="slide"><div class="n">1</div><div><h4>Capa</h4><p>Nome, slogan “Sua hidratação, sob controle.”, disciplina e integrantes: Diogo, Jean e Vitor.</p></div></div>
+      <div class="slide"><div class="n">2</div><div><h4>O problema</h4><p>Esquecimento, falta de controle e apps de lembrete que caem no esquecimento.</p></div></div>
+      <div class="slide"><div class="n">3</div><div><h4>Justificativa pessoal</h4><p>Uma frase de cada integrante sobre a utilidade no dia a dia.</p></div></div>
+      <div class="slide"><div class="n">4</div><div><h4>A solução em números</h4><p>2 plataformas, 21 endpoints, 15 conquistas, 35 testes.</p></div></div>
+      <div class="slide"><div class="n">5</div><div><h4>Funcionalidades principais</h4><p>Registro rápido, meta e anel, sequência, histórico, lembretes, clima e tema.</p></div></div>
+      <div class="slide"><div class="n">6</div><div><h4>Salas de desafio</h4><p>Fluxo de 5 passos, inspiração GymRats + Duolingo, chama coletiva.</p></div></div>
+      <div class="slide"><div class="n">7</div><div><h4>Trava anti-burla</h4><p>Meta batida + ≥ 2 registros + foto + 1 check-in por dia.</p></div></div>
+      <div class="slide"><div class="n">8</div><div><h4>Conquistas e níveis</h4><p>Escada de dificuldade (bronze → lendária) e fórmula de XP; foco em retenção.</p></div></div>
+      <div class="slide"><div class="n">9</div><div><h4>Arquitetura</h4><p>App → API Express (Render) → PostgreSQL (Supabase) + Open-Meteo; camadas do backend.</p></div></div>
+      <div class="slide"><div class="n">10</div><div><h4>Tecnologias e requisitos</h4><p>Stack + tabela resumida de requisitos atendidos.</p></div></div>
+      <div class="slide"><div class="n">11</div><div><h4>Banco de dados</h4><p>DER com as 7 tabelas e decisão de fuso horário.</p></div></div>
+      <div class="slide"><div class="n">12</div><div><h4>Distribuição sem lojas pagas</h4><p>APK Android + PWA no iPhone; por que não Expo Go.</p></div></div>
+      <div class="slide"><div class="n">13</div><div><h4>Desafios técnicos e Git</h4><p>2 ou 3 problemas reais resolvidos (ícones do PWA, teclado, fuso) + fluxo de branches.</p></div></div>
+      <div class="slide"><div class="n">14</div><div><h4>Demo, próximos passos e encerramento</h4><p>Demo ao vivo, limitações honestas, evoluções futuras e agradecimento.</p></div></div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Drink To You · Linguagem de Programação VI · 2026 · Diogo, Jean e Vitor — Documento gerado a partir do repositório do projeto.
+</footer>
+
+</body>
+</html>
